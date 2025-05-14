@@ -1,0 +1,20 @@
+# Task ID: 6
+# Title: P1.3: Implement RoadmapParser (Goal to Manifest)
+# Status: pending
+# Dependencies: 1, 2, 3, 4, 5
+# Priority: critical
+# Description: Finalize `RoadmapParser` (likely in `core/onboarding_service.py` or new `roadmap_parser.py`) to transform user goals into a validated `RoadmapManifest` (10-20 steps) using the LLM service, with supportive prompting, error handling, and audit logging, as per PRD v4.0.
+# Details:
+1. **RoadmapParser Logic (Consider placing in `core/services/roadmap_parser.py` or enhancing `OnboardingService`) (PRD Sec 3.4, 8-P1):
+   - `parse_goal_to_manifest(goal, context, request_context)` uses `LLMService` (Task #P1.1) and `PromptAugmentationService` (Task #P1.1).
+   - LLM Prompt: Focus on supportive scaffolding (approachable, 10-20 steps per PRD Sec 2), `is_major_phase` identification, clarity, efficiency, structured JSON output (PRD Sec 5).
+   - Manifest Validation: Use `RoadmapManifest.check_circular_dependencies()` (Task #P1.2), `get_topological_sort()` (Task #P0.4), and Pydantic validations. Adhere to 10-20 node target.
+   - Error Handling: Graceful, supportive messages (Task #P1.2).
+   - Implement basic audit logging for manifest generation events (PRD Sec 3).
+2. **Onboarding API Endpoint (`routers/onboarding.py`) (PRD Sec 8-P1):
+   - Refine `POST /onboarding/set_goal_and_context` (or similar consolidation of your existing `/set_goal` and `/add_context`) to take goal & context, call `RoadmapParser.parse_goal_to_manifest`, then call `HTAService.generate_initial_hta_from_manifest` (Task #P1.4).
+   - Ensure endpoint meets P75 < 6s target and uses 202 Accepted if at risk (PRD Sec 3.4, Task #P0.1).
+   - Collect informal P1 user feedback on language/tone from this flow (PRD Sec 8-P1).
+
+# Test Strategy:
+Test `RoadmapParser` with various goals/contexts for quality of 10-20 step manifests, LLM prompt effectiveness, validation logic. Performance test the full onboarding endpoint. Verify supportive error messages. Test audit log entries.

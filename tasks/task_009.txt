@@ -1,0 +1,21 @@
+# Task ID: 9
+# Title: P1.6: Implement Initial Streamlit UI (Core Loop)
+# Status: pending
+# Dependencies: 6, 7, 8
+# Priority: critical
+# Description: Develop basic Streamlit UI (`streamlit_app.py`, `front_end/`) for goal input, roadmap display (collapsible tree), task completion, loading states, and error feedback, as per PRD v4.0.
+# Details:
+1. **Onboarding UI (`front_end/onboarding_ui.py`, integrated into `streamlit_app.py`):
+   - Forms to submit goal/context to onboarding API endpoints (Task #P1.3).
+2. **Roadmap Display (`streamlit_app.py`) (PRD Sec 7):
+   - Basic collapsible tree visualization for the HTA (derived from `RoadmapManifest`). Your `hta_tree.py` in `modules` might have relevant logic for display structure.
+   - Display 10-20 nodes efficiently. No virtualization for MVP unless testing shows severe issues.
+   - Visually distinguish major phases and task statuses.
+3. **Task Interaction:** UI elements to trigger task completion (Task #P1.5 API). 4. **Common UI Elements (PRD Sec 7):
+   - Optimistic UI updates for task completion.
+   - Skeleton loaders/micro-animations (<300ms) for operations >~200ms.
+   - Clear loading indicators for backend processes >1-2s.
+   - Graceful, clear, non-judgmental error feedback (aligned with initial supportive principles from Task #P0.1). Use `st.error`, `st.warning`, `st.info`, `st.success` appropriately.
+
+# Test Strategy:
+Test core onboarding flow via UI. Verify roadmap display is clear, interactive, and responsive. Test optimistic updates and loading states. Review error messages for clarity and supportive tone. Basic usability testing with 1-2 informal users if possible.

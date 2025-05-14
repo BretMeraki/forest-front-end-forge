@@ -1,0 +1,19 @@
+# Task ID: 11
+# Title: P2.2: Implement Basic Phase Completion Logic & UI Notifications
+# Status: pending
+# Dependencies: 1, 3, 8
+# Priority: high
+# Description: Implement backend logic (`core/phase_notification_service.py` or `HTAService`) for detecting major phase completion (PhaseLogic-HTA Flow) and basic Streamlit UI notifications with encouraging, supportive language, as per PRD v4.0.
+# Details:
+1. **Phase Completion Logic (Enhance `core/phase_notification_service.py` or integrate into `HTAService`) (PRD F4.4, 8-P2):
+   - `check_phase_completion(...)`: Detect if all tasks under an `is_major_phase` node are complete (using `HTANodeModel` statuses and `RoadmapManifest` structure).
+   - `find_next_phase(...)`: Identify next logical major phase from `RoadmapManifest` (using topological sort, dependencies). Target >90% accuracy.
+   - Generate basic congratulatory messages (template-based initially, aligned with initial supportive principles from Task #P0.1).
+2. **Integration with Task Completion (Task #P1.5):
+   - `CompletionProcessor` calls `check_phase_completion`.
+3. **Basic UI Notification Components (`streamlit_app.py`) (PRD Sec 8-P2):
+   - Use `st.toast`, `st.success`, or custom components for notifications.
+   - Display completed phase, next phase suggestion, gentle cues. Use celebratory, non-pressuring tone.
+
+# Test Strategy:
+Test phase completion detection accuracy (>90%). Verify next phase suggestion logic. Test notification messages for supportive tone. Unit test logic with various manifest structures.

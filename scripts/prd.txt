@@ -1,0 +1,153 @@
+--- PAGE 1 ---
+
+Product Requirements Document: The Forest - "Living HTA & Semantic Memory" MVP
+
+Version: 3.18 (Lean Core MVP - Performance-First Architecture & Supportive Mission)
+Date: May 10, 2025
+Product Owner: Bret Schlansky
+Status: Revised for Lean MVP Development
+
+1. Introduction & Purpose
+
+• Product: The Forest (internally "Forest OS")
+
+Original Vision (from Manifesto "Forest System Version 1.1.26 2.pdf"): "Remind the user why being alive is a beautiful and precious experience," driven by "Poetic metaphor + practical consequence awareness."
+**[Core Mission - Supportive Scaffolding]:** A fundamental aim of Forest OS is to empower users, particularly those who find planning and executive tasks challenging or anxiety-inducing ("avoidants"). The system is designed to be a supportive, non-judgmental partner that helps users build confidence in their own abilities over time by providing clear structure, manageable steps, positive reinforcement, and gentle guidance. This "why" underpins all design and interaction choices.
+**[Vision Alignment]:** This MVP is the first step towards an "agentic goal crusher" that embodies this supportive philosophy – a system that not only helps users plan but actively and intelligently guides them through an adaptive roadmap to achieve their goals, fostering a sense of capability and reducing overwhelm.
+**[Critical User Experience Goal - Performance First]:** To ensure user engagement, trust, and an immersive flow, the system must feel exceptionally responsive and efficient, especially during core planning and adaptation interactions. Performance is a foundational feature, and lengthy processing delays are a major pain point to be actively mitigated from the outset through deliberate architectural and implementation choices.
+
+PRD Purpose: This document defines the requirements for the "Living HTA & Semantic Memory" Minimum Viable Product (MVP) of The Forest. This MVP focuses on creating a dynamic, adaptive, and performant system. When a user defines a goal with initial context, **[Analogy Clarification]:** Forest OS internally employs a structured, efficient decomposition process. This internal process is inspired by the thoroughness and depth with which tools like "Claude Task Master" analyze formal requirement documents to produce detailed task plans. Forest OS applies a similar rigor to the user's natural language goal and context.
+**[Manifest-HTA - Core]:** This internal processing culminates in a structured "Roadmap Manifest," serving as the persistent, authoritative plan.
+**[TM-INSPIRED - Architecture]:** From this manifest, Forest OS's `HTAService` generates a comprehensive, multi-level Hierarchical Task Analysis (HTA) tree – an initial detailed roadmap (target 10-20 well-structured steps for MVP).
+**[Alchemy - Core Synthesis]:** This HTA tree is the user's interactive "Living Tree," visually representing the Roadmap Manifest. It evolves dynamically as user interactions, task completions, and semantic memory feedback drive updates to both the manifest and the HTA tree, ensuring they remain synchronized.
+**[PhaseLogic - HTA Flow]:** As users complete significant "phases" (major branches) within their roadmap, the system will (for MVP) provide basic, encouraging cues for progressing to the next logical phase.
+**[MCP-LLM Vision - Arch]:** LLM interactions occur via an abstraction layer, designed for performance and future LLM flexibility.
+**[MCP-Interface - Optional]:** Optional MCP server exposure is a post-MVP consideration.
+All features beyond this Lean MVP scope will be disabled. MVP frontend: React test harness.
+
+**[MVP CLARIFICATION]:** "Paved" sections: the initial roadmap, and any subsequent dynamic expansions/modifications.
+**[PRD FEEDBACK v3.2 Cycle - Consideration]:** Strengths noted.
+
+2. Goals & Success Metrics
+
+Overall MVP Goal:
+Deliver a system where users onboard by defining a goal/context.
+**[Manifest-HTA - Core]:** System internally runs `roadmap_parser.parse_goal_to_manifest` to create a `RoadmapManifest`.
+**[TM-Roadmap - Vision]:** `HTAService.generate_from_manifest` uses this to generate the initial comprehensive HTA roadmap.
+**[Alchemy - Core Synthesis]:** This manifest-driven HTA tree evolves with manifest sync.
+**[LeanMVP - Simplify]:** Phase completion guidance is minimal and supportive.
+**[Core Mission - Supportive Scaffolding]:** The user experience is designed to be encouraging, clear, reduce planning anxiety, and build trust.
+**[Critical User Experience Goal - Performance First]:** Deliver a core planning and adaptation loop that feels consistently snappy, responsive, and efficient, avoiding user-perceptible delays.
+**[MCP-LLM Vision - Arch]:** Lay architectural groundwork for future user-selectable LLM backends, with current LLM interactions optimized for speed.
+(Other goals from v3.17).
+
+Success Metrics (MVP):
+    • **Manifest & HTA Roadmap Generation:** ≥ 95% successful generation... (Target 10-20 nodes). **[Core Mission - Supportive Scaffolding]:** Roadmap perceived as clear, non-overwhelming.
+        **[MVP Polish - Dev/UX]:** (Error Feedback Loops) Graceful, clear, non-judgmental error handling.
+        **[Critical User Experience Goal - Performance First]:**
+            • P75 latency for initial manifest generation (user submission to manifest object ready for HTA seeding, including LLM call) < 6 seconds.
+            • P75 latency for HTA seeding from manifest (manifest object to HTA tree ready for display) < 1 second.
+            • **[MVP Polish - Dev/UX]:** (Real-User Test Feedback) During P3/P4 UX sprints, users explicitly report the system "feels fast" or "responsive" during core interactions.
+    • Semantic-Episodic Memory & HTA/Manifest Evolution: (Standard metrics).
+    • **[MVP Polish - Dev/UX]:** (User Testing Scenario - Supportive Experience & Emotional Feedback): (Standard from v3.17).
+    • Contextual HTA Expansion: Expansion occurs for 100% of triggered nodes.
+        **[Critical User Experience Goal - Performance First]:** P75 latency for dynamic branch expansion (trigger to new manifest steps ready for HTA seeding, including LLM call) < 3 seconds.
+    • System Stability: Zero critical startup/runtime errors...
+    • Engagement Feel (Initial Roadmap & Core Loop): Initial HTA roadmap provides immediate relief... >75% positive sentiment...
+    • **[MCP-LLM Vision - Arch]:** `LLMClient` uses Abstraction Layer.
+    **[LLM-Opt - Strategy]:** Basic LLM call count, timing, token monitoring via logging from P0. **[Critical User Experience Goal - Performance First]:** These metrics actively reviewed in P1/P2 to proactively identify and address performance bottlenecks.
+
+**[PRD FEEDBACK v3.2 Cycle - Action/Decision]:** (Monitoring & Metrics - P4/P5) - Standard (v3.17).
+
+3. Technical Architecture & Directives
+
+3.1. In-Process Request Context Propagation (RequestContext) - Standard (v3.17).
+3.2. Roadmap Manifest & Data Models - Standard (v3.17 Pydantic & SQLAlchemy definitions).
+    **[Critical User Experience Goal - Performance First]:** (Optimized Data Layer)
+        • **Database Indexing Strategy:** Essential B-Tree indexes on `HTANodeModel` (FKs, `(tree_id, status)`, `(parent_id, status)`, `(roadmap_step_id)`, `(is_major_phase)`) are implemented from P0.
+        • **[LeanMVP - Defer]:** GIN index on `HTATreeModel.manifest` deferred unless P1/P2 testing shows manifest queries are a core flow bottleneck. Denormalized counts (`unmet_dependencies_count`) deferred.
+        • **Profile Early:** If tree rendering or manifest lookups show signs of slowness in P1/P2 staging/load tests, prioritize adding targeted GIN indexes or optimizing queries.
+
+**[MCP-LLM Vision - Arch]:** 3.3. LLM Service Abstraction Layer - Standard (v3.17 - Google Gemini Flash for MVP).
+    **[LLM-Opt - Strategy]:** (Prompt & Model Tuning for Performance)
+        • **Favor small, focused prompts:** Keep token counts minimal for LLM inputs. Design prompts to elicit concise, structured JSON outputs directly.
+        • **Fast, Cost-Effective Model:** MVP uses Gemini Flash. Benchmark quality and speed. Be ready to explore even lighter local models (7B/13B via Ollama, post-MVP) for highly frequent, small sub-flows if token counts/response times for the primary model become an issue for specific operations like branch expansions.
+    **[Critical User Experience Goal - Performance First]:** All LLM calls through `BaseLLMService` must be natively asynchronous (e.g., `generate_content_async`) to avoid blocking the server. Implement basic retry logic for transient errors.
+
+3.4. Core Services & Workflow (`HTAService`, `RoadmapParser`, `CompletionProcessor`)
+    **[Manifest-HTA - Core]:** Initial Goal Processing & Roadmap/HTA Generation (Onboarding):
+        1. User Input. **[LeanMVP - Simplify]:** No Q&A for P1.
+        2. **Manifest Creation:** `RoadmapParser.parse_goal_to_manifest(goal, context)`.
+            **[Critical User Experience Goal - Performance First]:** This entire process, including LLM interaction, must target P75 < 6s. Optimize prompt and expected output structure relentlessly for speed and conciseness.
+            **[LeanMVP - Defer]:** Server-side manifest caching deferred.
+        (Other steps standard).
+    **[TechReview - Implementation Detail]:** Transactional Consistency.
+    **[Critical User Experience Goal - Performance First]:** (Performance-First Architecture - Async by Default)
+        • All backend services involving I/O (LLM calls, DB writes/reads) and potentially expensive computations (complex parsing if not LLM-based) must use non-blocking asynchronous coroutines (`async/await`) throughout the call stack.
+        • **API Design for Long Operations:** For any operation identified as potentially exceeding the latency targets (e.g., a very complex initial manifest generation for an extremely broad goal, or a large re-scope post-MVP), the API should be designed to return `202 Accepted` with a polling URL for status, or use WebSockets (post-MVP) for progress updates. For MVP, aim to keep core operations within target synchronous response times.
+
+**[LLM-Opt - Strategy]:** 3.5. LLM Call Optimization & Performance - Standard (v3.17: Context Trimming, Basic Fallbacks, Token Caps).
+
+4. Semantic-Episodic Memory Flow & HTA/Manifest Roadmap Evolution
+
+F4.1 On Task Completion: Updates HTA & Manifest status. **[Critical User Experience Goal - Performance First]:** Perceived UI update must be sub-second (optimistic UI update, fast backend write).
+F4.2 HTA Dynamic Expansion: LLM generates new `RoadmapStep`s.
+    **[Critical User Experience Goal - Performance First]:** Must meet P75 < 3s target.
+    **[LeanMVP - Defer]:** Expansion caching deferred.
+F4.3 HTA Branch/Manifest Re-scoping: User targets node, provides context. LLM revises manifest section.
+    **[Critical User Experience Goal - Performance First]:** LLM part of re-scope aims for < 3s. Diff calculation & presentation must be very fast.
+    (Other details and Future Vision from v3.17).
+F4.4 Phase Completion and Transition Guidance - Standard (v3.17).
+
+5. LLM Prompt Engineering
+    **[Critical User Experience Goal - Performance First]:** Prompts engineered for efficient LLM processing (clarity, conciseness, structured output requests) and minimal token generation.
+    (Other prompt details from v3.17, emphasizing supportive language).
+
+6. Feature Flags & Modularity: Standard.
+7. API & UX - Standard (v3.17).
+    **[Critical User Experience Goal - Performance First]:** (Minimal, Atomic UX Steps)
+        • **Optimistic UI Updates:** For actions like task completion or simple status changes, update UI immediately while background sync occurs. Clearly indicate if sync fails.
+        • **Lightweight Loaders:** Use skeleton loaders or subtle micro-animations (<300ms duration) instead of blocking spinners for any process taking a few hundred milliseconds to 1-2 seconds. For longer waits (approaching manifest gen targets), more explicit progress indication is needed.
+    **[TechReview - Implementation Detail]:** Start with collapsible subtrees.
+
+**[MCP-Interface - Optional]:** 7.1. Optional MCP Server Interface (Post-MVP) - **[LeanMVP - Defer]**.
+
+8. Phased Development Roadmap (Lean MVP Focus)
+
+**[Critical User Experience Goal - Performance First]:** Performance testing and optimization are continuous from P0.
+
+P0: Foundation, Context & Schema (1 week)
+    • `RequestContext`, `BaseLLMService`+ Gemini (async, token caps, timing/token logging, retry). DB Migrations (essential indexes). Pydantic Manifest/Step. `UserModel.id` fix. Circular dependency check. Topo sort. Startup. React auth. Prune.
+    • **Define & document specific performance targets** (latency, token counts) for core LLM-driven operations.
+
+P1: Core Loop: Initial Roadmap Generation & Task Completion (2-3 weeks)
+    • `RoadmapParser.parse_goal_to_manifest` (optimize prompt for speed). `HTAService.generate_initial_hta_from_manifest`. Onboarding API (design for async if initial tests show >5s).
+    • React UI (collapsible, error feedback, loading indicators). Task completion API (optimistic UI).
+    • **Actively test & iterate on prompt/logic if manifest generation latency targets are missed.** Log and review LLM call performance metrics.
+
+P2: Core Loop: Dynamic Expansion & Basic Phase UI (2 weeks)
+    • Dynamic HTA/Manifest expansion (measure against latency targets). `GET /trees/{tree_id}/next`. Basic Phase UI.
+    • UI/UX mockups for re-scope review UI.
+    • **If P1 showed performance issues, prioritize further prompt tuning or introduce very basic caching if critical for core flow.**
+    • (Q&A intro evaluated).
+
+P3: Roadmap Adaptation, Iteration & Stability, Initial UX Validation Sprint (1–2 weeks)
+    • HTA/Manifest Re-scoping (measure LLM/diff/commit latency).
+    • UX Validation Sprint: **[Critical User Experience Goal - Performance First]:** Explicitly ask testers, "How fast and responsive does the system feel during planning and updates?" Capture sensory feedback.
+    (Other items from v3.17).
+
+P4: MVP Polish, **Final Performance Tuning**, Metrics, Security, Deployment (1 week)
+    • Address critical UX fixes AND **any identified performance bottlenecks** from P0-P3. Focus on meeting all defined latency targets.
+    (Other items from v3.17).
+
+P5: Initial Self-Evaluation & Iteration Planning (Ongoing) - Standard (v3.17).
+
+9. Out of Scope for this Lean MVP - Standard (v3.17).
+
+10. Bottom Line / Guiding Principles for MVP Development
+    • **[Core Mission - Supportive Scaffolding]:** (Standard from v3.17)
+    • **[Critical User Experience Goal - Performance First]: The system must feel fast, fluid, and responsive to the user, ensuring an immersive and frustration-free planning experience. Performance is a core feature, architected and tested from Day 0.**
+    • (Other principles from v3.17).
+
+**[PRD FEEDBACK v3.2 Cycle - Devil's Advocate Consideration Summary]:**
+PRD v3.18 (Lean Core MVP - Performance-First Architecture & Supportive Mission) elevates responsiveness and efficiency to a primary guiding principle, integrating performance targets, architectural considerations for speed (async, optimized data layer, prompt tuning), and continuous performance monitoring throughout the MVP development lifecycle. This ensures the "agentic goal crusher" is not only intelligent and supportive but also agile and delightful to use.

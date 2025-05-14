@@ -1,0 +1,19 @@
+# Task ID: 18
+# Title: P4.2: Conduct Chaos / Fault-Injection Testing
+# Status: pending
+# Dependencies: 15, 17
+# Priority: high
+# Description: Perform targeted chaos/fault-injection testing in a staging environment to verify system resilience, data integrity, and rollback mechanisms, as per PRD v4.0.
+# Details:
+1. **Planning (PRD Sec 3, 8-P4):
+   - Identify critical data-modifying API endpoints and service operations.
+   - Define fault scenarios: DB errors (connection loss, write failure during transaction), LLM API timeouts/errors during multi-step operations (e.g., manifest generation, expansion).
+2. **Execution (Staging/Test Environment) (PRD Sec 8-P4):
+   - Manually trigger or script faults during critical operations.
+   - Verify transactional rollback: check database state and API responses to ensure data consistency or reversion to pre-operation state.
+   - Verify error handling: check for graceful error messages (aligned with Voice & Tone Guide) and detailed server logs (with `trace_id`).
+   - Verify audit trail (Task #P0.1 strategy, P1 impl.) captures relevant failure/rollback details.
+3. **Review & Iterate:** Document findings. Address critical resilience gaps found.
+
+# Test Strategy:
+Focus on atomicity of operations and data consistency post-failure. Ensure no partial updates or corrupted data. Check logs for clear error reporting and evidence of rollback.

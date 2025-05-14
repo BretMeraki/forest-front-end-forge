@@ -1,0 +1,18 @@
+# Task ID: 17
+# Title: P4.1: Implement UX, Performance & Branding Optimizations
+# Status: pending
+# Dependencies: 14
+# Priority: critical
+# Description: Apply critical fixes and refinements based on P3 Validation Sprint feedback, focusing on usability, performance, and full alignment with the Voice & Tone Guide, as per PRD v4.0.
+# Details:
+1. **UX & Performance Refinement Checkpoint (PRD Sec 8-P4):
+   - Review P3 validation report (Task #P3.2). Prioritize and implement fixes.
+2. **LLM Operations & UI Copy (PRD Sec 5, 7, 8-P4):
+   - Refine LLM prompts for efficiency AND ensure strict alignment with the finalized Voice & Tone Guide (Task #P3.2).
+   - Update ALL user-facing UI copy (error messages, notifications, button labels, onboarding text in Streamlit) to be fully consistent with the Voice & Tone Guide.
+3. **UI Component Optimization (Streamlit) (PRD Sec 7):
+   - Address P3 usability issues. If roadmap display with 10-20 nodes was slow, investigate optimization (Streamlit doesn't have easy virtualization; consider simpler display or pagination if truly problematic). Ensure animations/transitions are smooth.
+4. **Re-validate Key Fixes:** Informally with 1-2 original P3 testers if major changes were made.
+
+# Test Strategy:
+Targeted testing of all fixes. Re-run key P3 test scenarios. Performance profile optimized areas. Thorough review of all UI text against Voice & Tone Guide.

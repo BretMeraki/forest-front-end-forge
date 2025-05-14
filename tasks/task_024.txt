@@ -1,0 +1,11 @@
+# Task ID: 24
+# Title: Stretch: Implement Optional MCP Server Wrapper
+# Status: deferred
+# Dependencies: None
+# Priority: low
+# Description: Create a Model Context Protocol (MCP) server interface for integration with other AI tools (PRD Sec 7.1, Sec 9 - Out of Scope for Lean MVP).
+# Details:
+1. This is a P(n+1) feature as per PRD v4.0 Section 9. 2. If implemented, involves: separate entry point (`mcp_server.py`), MCP handlers wrapping core services, conversion utilities, documentation, MCP-specific auth.
+
+# Test Strategy:
+Test MCP methods, request/response conversion, and integration with a sample MCP client.

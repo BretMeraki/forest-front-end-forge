@@ -1,0 +1,367 @@
+{
+  "$schema": "./schemas/tasklist.schema.json",
+  "meta": {
+    "prdVersion": "4.0 (Definitive MVP - Consolidated)",
+    "generatedDate": "2025-05-10",
+    "notes": "This task list is derived from PRD v4.0, considering the existing codebase. Tasks are phased. Focus on completing tasks in earlier phases before moving to later ones. Dependencies are key for sequencing."
+  },
+  "tasks": [
+    {
+      "id": 0,
+      "phase": "P0",
+      "title": "P0.1: Finalize Core Project Setup & Foundational Standards",
+      "description": "Solidify project structure, Python environment (3.11.8 as per PRD, current runtime.txt is 3.12.4 - reconcile), configurations, performance targets, data integrity strategies, and developer guidelines, aligning existing setup with PRD v4.0.",
+      "details": "1. **Environment & Config (PRD Sec 8-P0):\n   - Confirm Python version: PRD v4.0 specifies 3.11.8. Your `runtime.txt` shows `python-3.12.4`. Reconcile and update all relevant files (`runtime.txt`, `pyproject.toml`/`requirements.txt`, Dockerfile in Task #P4.5).\n   - Solidify secure `SECRET_KEY` handling (from `settings.py`, `.env`).\n   - Review `settings.py`: Ensure all feature flags from `core/feature_flags.py` (PRD v4.0 Section 6) are present and defaults align with MVP strategy. Add any missing configs (e.g., for audit log, idempotency keys if needed centrally).\n   - Finalize `.env.example` based on `settings.py`.\n   - Deliverable: `Performance-First Developer Quickstart` guide (PRD Sec 8-P0).\n   - Deliverable: Initial `Data Validation Rules Catalog` (PRD Sec 3, 8-P0).\n2. **Performance & Integrity Standards (PRD Sec 2, 3, 8-P0):\n   - Document and confirm P75 latency targets & 0.1% error budget (PRD Sec 2).\n   - Document initial strategies for transactional consistency (REPEATABLE READ default), basic audit trail structure/format, and initial design considerations for API idempotency (PRD Sec 3, 8-P0).\n3. **Alembic Setup (PRD Sec 8-P0):\n   - Verify `alembic.ini` (uses `DB_CONNECTION_STRING` - good) and `env.py` correctly load DB URL and `Base` metadata from `forest_app.persistence.models` for migrations.\n4. **RequestContext & Middleware (PRD Sec 3.1):\n   - Refine existing `forest_app.core.models.RequestContext` to include `timestamp_utc`, `feature_flags`, and Pydantic `model_config(frozen=True, extra='forbid', ...)`. Implement `@lru_cache` for `has_feature` (ensure `self` is hashable or adapt cache strategy if instance method used on mutable `self`).\n   - Implement/Verify `get_request_context` FastAPI dependency in `forest_app.dependencies.py`.\n   - Implement/Verify `PerformanceMiddleware` and/or enhance existing `LoggingMiddleware` in `forest_app.main.py` for API timing, `X-Process-Time` header, and `trace_id` logging.",
+      "testStrategy": "Verify Python version alignment. Test env var loading, `SECRET_KEY` security. Confirm Alembic offline/online migrations run. Benchmark `RequestContext` and `PerformanceMiddleware`. Review all P0 deliverables.",
+      "status": "pending",
+      "dependencies": [],
+      "priority": "critical"
+    },
+    {
+      "id": 1,
+      "phase": "P0",
+      "title": "P0.2: Solidify Core SQLAlchemy Models & Initial Migrations",
+      "description": "Finalize SQLAlchemy models (`User`, `HTATree`, `HTANode`, `MemorySnapshot`, `TaskFootprint`, `ReflectionLog`) with all PRD v4.0 requirements (UUID PKs, JSONB, critical indexes). Generate/update Alembic migrations.",
+      "details": "1. **`UserModel.id` to UUID (PRD Task #6 related):\n   - Modify `UserModel` in `forest_app.persistence.models.py` to use `id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)`.\n   - Update all related foreign keys in other models (e.g., `HTATreeModel.user_id`, `HTANodeModel.user_id`, `MemorySnapshotModel.user_id`) to UUID type.\n2. **`HTATreeModel` Enhancements (PRD Sec 3.2):\n   - Ensure `manifest` field is `Mapped[dict] = mapped_column(JSONB, nullable=True)`.\n   - Add GIN index: `Index(\"ix_hta_trees_manifest_gin\", HTATreeModel.manifest, postgresql_using=\"gin\")` in `__table_args__` or dedicated migration.\n3. **`HTANodeModel` Indexing (PRD Sec 3.2):\n   - Add/Verify B-Tree indexes: `Index(\"ix_hta_nodes_tree_id_status\", HTANodeModel.tree_id, HTANodeModel.status)`, `Index(\"ix_hta_nodes_tree_id_is_major_phase_status\", HTANodeModel.tree_id, HTANodeModel.is_major_phase, HTANodeModel.status)`, `Index(\"ix_hta_nodes_parent_id_status\", HTANodeModel.parent_id, HTANodeModel.status)`. Ensure `roadmap_step_id` and `is_major_phase` are also indexed as needed (your `is_major_phase` is already indexed - good).\n4. **`MemorySnapshotModel` Enhancements (PRD Sec 4):\n   - Ensure `snapshot_data` is JSONB. Add `Index(\"ix_memory_snapshots_user_id_created_at\", MemorySnapshotModel.user_id, MemorySnapshotModel.created_at.desc())`.\n5. **`TaskFootprintModel`, `ReflectionLogModel`:** Review fields in `forest_app.persistence.models.py` against PRD v4.0 intent for basic audit/memory (e.g., timestamps, relevant IDs, type of event/reflection). 6. **Alembic Migrations:** Generate/update Alembic revision(s) in `alembic/versions/` to capture ALL schema changes (UUIDs, JSONB types, new indexes). Test `upgrade` and `downgrade` paths thoroughly. Consolidate or manage sequence with existing `f5b76ed1b9bd_...` migration.",
+      "testStrategy": "Verify Alembic migrations apply/rollback. Unit test model creation/relationships. Manually inspect DB schema for indexes. Query performance tests for indexed fields will come with feature implementation.",
+      "status": "done",
+      "dependencies": [],
+      "priority": "critical"
+    },
+    {
+      "id": 2,
+      "phase": "P0",
+      "title": "P0.3: Setup Foundational Monitoring, Logging & Alerting",
+      "description": "Configure tools and basic infrastructure for structured logging (LLM calls, API latencies, DB ops) and alerting on P75 latency targets & 0.1% error budget, as per PRD v4.0.",
+      "details": "1. **Structured Logging (PRD Sec 3, 8-P0):\n   - Enhance `LoggingMiddleware` in `forest_app.main.py` to ensure `trace_id` from `RequestContext` (Task #P0.1) is included in all request-related logs.\n   - Configure `python-json-logger` (from `requirements.txt`) for structured JSON log output for easier parsing by Sentry or other tools.\n2. **Metrics Collection Foundation (PRD Sec 2, 8-P0):\n   - Ensure `PerformanceMiddleware` (Task #P0.1) or enhanced `LoggingMiddleware` correctly logs API latencies.\n   - `BaseLLMService` (Task #P1.1) will be responsible for logging LLM call details (count, timing, tokens, errors).\n   - Plan for logging key DB operation timings (e.g., in `forest_app.persistence.repository.py` methods or via SQLAlchemy event listeners - P1 implementation).\n3. **Alerting Setup (PRD Sec 2, 8-P0):\n   - Configure Sentry (using `SENTRY_DSN` from `settings.py`) or chosen platform for alerts if P75 latency targets or 0.1% error budget are breached. Also for critical error rate spikes.\n   - Ensure this is operational by end of P1.",
+      "testStrategy": "Verify logs are structured, include `trace_id`, and are sent to Sentry (if configured). Confirm API latencies are logged. Test basic alert mechanism by simulating a condition that breaches a defined threshold.",
+      "status": "pending",
+      "dependencies": [
+        1
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 3,
+      "phase": "P0",
+      "title": "P0.4: Implement Core Pydantic Data Models (Manifest/Step)",
+      "description": "Develop performance-optimized Pydantic models for `RoadmapStep` and `RoadmapManifest` with validation, internal indexing for efficient operations, and helper methods, as per PRD v4.0.",
+      "details": "1. **Refine `RoadmapStep` (`core/roadmap_models.py`) (PRD Sec 3.2):\n   - Set `model_config = ConfigDict(frozen=True, extra='forbid', validate_assignment=False, populate_by_name=True, validate_default=False, arbitrary_types_allowed=True)`.\n   - Change `dependencies: List[UUID]` to `dependencies: FrozenSet[UUID] = Field(default_factory=frozenset)`. Add `@validator('dependencies', pre=True)` to convert lists.\n   - Add `created_at: datetime = Field(default_factory=...)`, `updated_at: datetime = Field(default_factory=...)`.\n   - Ensure `hta_metadata: Dict[str, Any] = Field(default_factory=dict)` for `is_major_phase` etc.\n2. **Refine `RoadmapManifest` (`core/roadmap_models.py`) (PRD Sec 3.2):\n   - Set `model_config = ConfigDict(extra='forbid', ...) `.\n   - Implement internal indexes in `__init__` (via `_build_indexes()`): `_step_index`, `_dependency_graph`, `_reverse_dependency_graph`, `_topological_sort_cache` (these should be private instance variables, not Pydantic fields unless carefully managed with `exclude=True` for serialization).\n   - Add `created_at: datetime`, `updated_at: datetime`. Manage `updated_at` on logical mutations (often means creating new manifest instances if steps are immutable).\n3. **Implement Helper Methods on `RoadmapManifest` (PRD Sec 3.2.1):\n   - `get_step_by_id`, `update_step_status` (returns new manifest), `add_step` (returns new manifest), `get_pending_actionable_steps`, `get_major_phases`.\n4. **Implement Cached Dependency Algorithms on `RoadmapManifest`:\n   - `check_circular_dependencies()` (details in Task #P1.2). Consider caching strategy if manifest is immutable vs. mutable.\n   - `get_topological_sort()` (builds/uses `_topological_sort_cache`). Invalidate cache or create new manifest on changes.\n5. **Validation:** Ensure models incorporate rules from `Data Validation Rules Catalog` (Task #P0.1).",
+      "testStrategy": "Unit test model creation, validation (from Validation Catalog), internal index building, helper methods. Benchmark operations with various manifest sizes.",
+      "status": "pending",
+      "dependencies": [],
+      "priority": "critical"
+    },
+    {
+      "id": 4,
+      "phase": "P1",
+      "title": "P1.1: Implement LLM Service (Base & Gemini)",
+      "description": "Refine/Complete `BaseLLMService` and `GoogleGeminiService` (`integrations/llm_service.py`) to be fully async, with robust retry (exponential backoff), timeout, fallback, token controls, audit logging, and DI integration. Implement `PromptAugmentationService` and `ContextTrimmer`.",
+      "details": "1. **BaseLLMService (`integrations/llm_service.py`) (PRD Sec 3.3):\n   - Ensure `generate_content_async` (or similar methods like `generate_text_async`, `generate_json_async`) are robust and truly non-blocking.\n   - Implement/Verify retry logic using `tenacity` (from `requirements.txt`) respecting API idempotency (Task #P0.1 strategy).\n   - Implement `asyncio.wait_for` for timeouts and clear fallbacks.\n   - Implement `_record_metrics` method for audit logging (count, timing, tokens, errors - to system from Task #P0.3).\n   - Implement lightweight caching for identical, small, repeatable calls (PRD Sec 3.4).\n   - Defer/Disable `PredictivePrefetchService` for MVP (PRD Sec 9).\n2. **GoogleGeminiService (subclass of `BaseLLMService`) (PRD Sec 3.3):\n   - Use Google AI client's `generate_content_async`.\n   - Implement `max_output_tokens` enforcement.\n   - Use `settings.GEMINI_MODEL_NAME` and `settings.GEMINI_ADVANCED_MODEL_NAME` from `config/settings.py`.\n3. **PromptAugmentationService (PRD Sec 5):\n   - Create new service (e.g., in `core/services/`) for pre-pending/appending standard instructions (supportive tone, output structure requests) to prompts. Load templates efficiently.\n4. **ContextTrimmer (`utils/context_trimmer.py` or similar) (PRD Sec 3.5):\n   - Implement `ContextTrimmer` to cap `recent_tasks_log` and apply heuristics to `journey_summary` to optimize token usage. Integrate into LLM calls where full context is passed.",
+      "testStrategy": "Test LLM service layer overhead (<1ms excluding API call). Verify async behavior, retry logic, timeouts, fallbacks. Confirm token controls and metrics logging. Test `ContextTrimmer` effectiveness.",
+      "status": "pending",
+      "dependencies": [
+        1,
+        2,
+        3
+      ],
+      "priority": "critical"
+    },
+    {
+      "id": 5,
+      "phase": "P1",
+      "title": "P1.2: Implement Circular Dependency Check & Comprehensive Error Handling",
+      "description": "Finalize circular dependency detection for `RoadmapManifest` and implement a comprehensive error handling strategy with supportive user messages, as per PRD v4.0.",
+      "details": "1. **Circular Dependency Check (`RoadmapManifest` method or `utils/dependency_utils.py`) (PRD Sec 3.2):\n   - Implement/Finalize `RoadmapManifest.check_circular_dependencies()` (from Task #P0.4) using Tarjan's or similar. Ensure it identifies specific steps in cycles and provides detailed info.\n2. **Comprehensive Error Handling Strategy (PRD Sec 2, 3, 5):\n   - Define base `ForestError(Exception)` and specific errors (`CircularDependencyError`, `LLMError`, `DatabaseError`, `DataConsistencyError`, `TransactionFailureError`, `ValidationError`) in `utils/error_handling.py` (create if not existing).\n   - Implement FastAPI exception handlers in `main.py` to return standardized JSON error responses (with `trace_id` from `RequestContext`) and appropriate HTTP status codes. Messages must align with initial supportive principles (Task #P0.1) and later the Voice & Tone Guide (Task #P2.5).\n   - Ensure robust error logging for all caught exceptions, including full context and `trace_id` (Task #P0.3).",
+      "testStrategy": "Test circular dependency detection with various patterns. Verify error messages are supportive. Test FastAPI error handlers return correct status codes and formatted, user-friendly responses. Test specific error types are raised and handled correctly.",
+      "status": "pending",
+      "dependencies": [
+        1,
+        3
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 6,
+      "phase": "P1",
+      "title": "P1.3: Implement RoadmapParser (Goal to Manifest)",
+      "description": "Finalize `RoadmapParser` (likely in `core/onboarding_service.py` or new `roadmap_parser.py`) to transform user goals into a validated `RoadmapManifest` (10-20 steps) using the LLM service, with supportive prompting, error handling, and audit logging, as per PRD v4.0.",
+      "details": "1. **RoadmapParser Logic (Consider placing in `core/services/roadmap_parser.py` or enhancing `OnboardingService`) (PRD Sec 3.4, 8-P1):\n   - `parse_goal_to_manifest(goal, context, request_context)` uses `LLMService` (Task #P1.1) and `PromptAugmentationService` (Task #P1.1).\n   - LLM Prompt: Focus on supportive scaffolding (approachable, 10-20 steps per PRD Sec 2), `is_major_phase` identification, clarity, efficiency, structured JSON output (PRD Sec 5).\n   - Manifest Validation: Use `RoadmapManifest.check_circular_dependencies()` (Task #P1.2), `get_topological_sort()` (Task #P0.4), and Pydantic validations. Adhere to 10-20 node target.\n   - Error Handling: Graceful, supportive messages (Task #P1.2).\n   - Implement basic audit logging for manifest generation events (PRD Sec 3).\n2. **Onboarding API Endpoint (`routers/onboarding.py`) (PRD Sec 8-P1):\n   - Refine `POST /onboarding/set_goal_and_context` (or similar consolidation of your existing `/set_goal` and `/add_context`) to take goal & context, call `RoadmapParser.parse_goal_to_manifest`, then call `HTAService.generate_initial_hta_from_manifest` (Task #P1.4).\n   - Ensure endpoint meets P75 < 6s target and uses 202 Accepted if at risk (PRD Sec 3.4, Task #P0.1).\n   - Collect informal P1 user feedback on language/tone from this flow (PRD Sec 8-P1).",
+      "testStrategy": "Test `RoadmapParser` with various goals/contexts for quality of 10-20 step manifests, LLM prompt effectiveness, validation logic. Performance test the full onboarding endpoint. Verify supportive error messages. Test audit log entries.",
+      "status": "pending",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "priority": "critical"
+    },
+    {
+      "id": 7,
+      "phase": "P1",
+      "title": "P1.4: Implement HTAService (Manifest to HTA Tree & Core Ops)",
+      "description": "Refine `HTAService` (`core/services/hta_service.py`) to generate HTA trees from manifests, manage HTA/Manifest synchronization, and support core operations with transactional consistency, audit logging, and data integrity, as per PRD v4.0.",
+      "details": "1. **HTAService Methods (PRD Sec 3.4, 8-P1):\n   - `generate_initial_hta_from_manifest(manifest: RoadmapManifest, user_id: UUID, request_context: RequestContext) -> HTATreeModel`: Use `manifest.get_topological_sort()`. Convert `RoadmapStep`s to `HTANodeModel`s. Store `manifest.model_dump_json()` in `HTATreeModel.manifest`. Ensure <1s target (PRD Sec 2). Implement with transactional consistency and audit logging.\n   - Review and align existing methods like `initialize_task_hierarchy`, `update_task_state` (likely becomes `update_node_status`), `get_task_hierarchy` (for `GET /hta/state`), `load_tree`, `save_tree` with PRD v4.0. Emphasize `RoadmapManifest` as the source of truth for structure, with `HTANodeModel` primarily for status and HTA-specific metadata/state. All mutations must be transactional and audited (PRD Sec 3).\n2. **HTA/Tree API Endpoints (`routers/hta.py`, new `/trees` router if needed) (PRD Sec 8-P1):\n   - `GET /hta/state` (or similar): Retrieves HTA view derived from `HTATreeModel.manifest` and `HTANodeModel` statuses.\n   - `POST /trees` (if not fully covered by onboarding Task #P1.3): Endpoint to create a new tree. Must be idempotent if applicable (PRD Sec 3, Task #P0.1).",
+      "testStrategy": "Test `generate_initial_hta_from_manifest` for speed (<1s) and correctness. Test transactional integrity of all HTA/Manifest modifying operations (simulated failures, rollbacks). Verify audit logs. Test API endpoints.",
+      "status": "pending",
+      "dependencies": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "priority": "critical"
+    },
+    {
+      "id": 8,
+      "phase": "P1",
+      "title": "P1.5: Implement Task Completion & Basic Positive Reinforcement",
+      "description": "Refine `CompletionProcessor` (`core/processors/completion_processor.py`) for task/node completion, ensuring HTA/Manifest sync, `MemorySnapshot` updates, audit logging, idempotency, and basic supportive reinforcement, as per PRD v4.0.",
+      "details": "1. **CompletionProcessor (PRD F4.1, 8-P1):\n   - `process_node_completion(...)`: Update `HTANodeModel.status` and corresponding `RoadmapStep.status` in `RoadmapManifest` (via `RoadmapManifest.update_step_status` helper from Task #P0.4) transactionally.\n   - `MemorySnapshot` (`persistence/models.py`, `core/snapshot.py`): Create/update `MemorySnapshotModel`, log to `recent_tasks_log`, `confidence_building_interactions` (PRD Sec 4).\n   - Positive Reinforcement: Basic template messages for MVP, aligned with initial supportive principles (Task #P0.1). Stronger if `HTANodeModel.is_major_phase=True`.\n   - Update `HTANodeModel.branch_triggers.current_completion_count` (for Task #P2.1).\n   - Implement with full transactional consistency and audit logging.\n2. **Task Completion API Endpoint (`routers/core.py` -> `POST /complete_task` or `routers/hta.py` -> `POST /nodes/{node_id}/complete`) (PRD Sec 8-P1):\n   - Call `CompletionProcessor`. Design for idempotency (PRD Sec 3, Task #P0.1).\n   - UI should use optimistic updates (<100ms perceived completion - PRD Sec 7).",
+      "testStrategy": "Test completion updates HTA node & manifest step transactionally (verify rollback on failure). Verify `MemorySnapshot`. Test reinforcement messages. Test API endpoint idempotency. Verify audit logs. Check backend processing time (<1s).",
+      "status": "pending",
+      "dependencies": [
+        1,
+        2,
+        3,
+        7
+      ],
+      "priority": "critical"
+    },
+    {
+      "id": 9,
+      "phase": "P1",
+      "title": "P1.6: Implement Initial Streamlit UI (Core Loop)",
+      "description": "Develop basic Streamlit UI (`streamlit_app.py`, `front_end/`) for goal input, roadmap display (collapsible tree), task completion, loading states, and error feedback, as per PRD v4.0.",
+      "details": "1. **Onboarding UI (`front_end/onboarding_ui.py`, integrated into `streamlit_app.py`):\n   - Forms to submit goal/context to onboarding API endpoints (Task #P1.3).\n2. **Roadmap Display (`streamlit_app.py`) (PRD Sec 7):\n   - Basic collapsible tree visualization for the HTA (derived from `RoadmapManifest`). Your `hta_tree.py` in `modules` might have relevant logic for display structure.\n   - Display 10-20 nodes efficiently. No virtualization for MVP unless testing shows severe issues.\n   - Visually distinguish major phases and task statuses.\n3. **Task Interaction:** UI elements to trigger task completion (Task #P1.5 API). 4. **Common UI Elements (PRD Sec 7):\n   - Optimistic UI updates for task completion.\n   - Skeleton loaders/micro-animations (<300ms) for operations >~200ms.\n   - Clear loading indicators for backend processes >1-2s.\n   - Graceful, clear, non-judgmental error feedback (aligned with initial supportive principles from Task #P0.1). Use `st.error`, `st.warning`, `st.info`, `st.success` appropriately.",
+      "testStrategy": "Test core onboarding flow via UI. Verify roadmap display is clear, interactive, and responsive. Test optimistic updates and loading states. Review error messages for clarity and supportive tone. Basic usability testing with 1-2 informal users if possible.",
+      "status": "pending",
+      "dependencies": [
+        6,
+        7,
+        8
+      ],
+      "priority": "critical"
+    },
+    {
+      "id": 10,
+      "phase": "P2",
+      "title": "P2.1: Implement HTA Dynamic Expansion (Backend & Basic UI)",
+      "description": "Implement backend logic (LLM generates new `RoadmapSteps`, HTA/Manifest updated transactionally/audited/idempotent) and basic UI for dynamic branch expansion with collaborative framing, as per PRD v4.0.",
+      "details": "1. **BranchExpansionService (New service or extend `HTAService`) (PRD F4.2, 8-P2):\n   - `expand_branch(node_id, additional_context, request_context)`: Retrieve parent `HTANodeModel`. Call LLM (Task #P1.1) with collaborative prompt (initial version) to generate new `RoadmapStep`s. Update `RoadmapManifest` (Task #P0.4 `add_step`) and create new `HTANodeModel`s transactionally, with audit logging. Ensure P75 < 3s target.\n   - Expansion Triggers: `CompletionProcessor` (Task #P1.5) updates `HTANodeModel.branch_triggers`. Logic to set `expand_now` or allow user-initiated expansion via API.\n2. **API Endpoint (`routers/hta.py` or similar) (PRD F4.2):\n   - `POST /nodes/{node_id}/expand`: Calls expansion service. Design for idempotency.\n3. **Streamlit UI (`streamlit_app.py`) (PRD Sec 8-P2):\n   - Basic UI components to trigger expansion and display new sub-tasks with collaborative intro message. Smooth transitions.",
+      "testStrategy": "Test expansion service performance (<3s), transactional integrity, audit logging, idempotency. Verify LLM prompt's collaborative framing. Test UI for clarity and collaborative feel. Validate expansion trigger logic.",
+      "status": "pending",
+      "dependencies": [
+        3,
+        4,
+        7,
+        8,
+        9
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 11,
+      "phase": "P2",
+      "title": "P2.2: Implement Basic Phase Completion Logic & UI Notifications",
+      "description": "Implement backend logic (`core/phase_notification_service.py` or `HTAService`) for detecting major phase completion (PhaseLogic-HTA Flow) and basic Streamlit UI notifications with encouraging, supportive language, as per PRD v4.0.",
+      "details": "1. **Phase Completion Logic (Enhance `core/phase_notification_service.py` or integrate into `HTAService`) (PRD F4.4, 8-P2):\n   - `check_phase_completion(...)`: Detect if all tasks under an `is_major_phase` node are complete (using `HTANodeModel` statuses and `RoadmapManifest` structure).\n   - `find_next_phase(...)`: Identify next logical major phase from `RoadmapManifest` (using topological sort, dependencies). Target >90% accuracy.\n   - Generate basic congratulatory messages (template-based initially, aligned with initial supportive principles from Task #P0.1).\n2. **Integration with Task Completion (Task #P1.5):\n   - `CompletionProcessor` calls `check_phase_completion`.\n3. **Basic UI Notification Components (`streamlit_app.py`) (PRD Sec 8-P2):\n   - Use `st.toast`, `st.success`, or custom components for notifications.\n   - Display completed phase, next phase suggestion, gentle cues. Use celebratory, non-pressuring tone.",
+      "testStrategy": "Test phase completion detection accuracy (>90%). Verify next phase suggestion logic. Test notification messages for supportive tone. Unit test logic with various manifest structures.",
+      "status": "pending",
+      "dependencies": [
+        1,
+        3,
+        8
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 12,
+      "phase": "P2.5",
+      "title": "P2.5: Conduct Brand Discovery Sprint",
+      "description": "Run qualitative user sessions to identify resonant metaphors, terminology, and tone for 'The Forest', producing a 'Brand Hypotheses' document, as per PRD v4.0.",
+      "details": "1. **Goal:** Surface metaphors, terminology, and tone that genuinely resonate (PRD Sec 8-P2.5). 2. **Activities:**\n   - Recruit and run 3-5 brief qualitative sessions with early users (informal: friends, colleagues fitting profile) to discuss their experience with the P1/P2 core loop.\n   - Use open-ended questions: “What does ‘planting a seed’ or generating a plan feel like?” “How would you describe this process?” “What kind of voice feels most supportive?”\n   - Workshop 2-3 metaphor/name candidates and voice characteristics against user language.\n3. **Output (Deliverable):** Short “Brand Hypotheses” document: top 1-2 metaphor choices, key terminology, sample voice/tone guidelines (PRD Sec 8-P2.5).",
+      "testStrategy": "Analyze qualitative feedback for themes. Ensure 'Brand Hypotheses' doc captures testable concepts for P3. For solo dev, even 1-2 deep conversations can be insightful if 3-5 is too much.",
+      "status": "pending",
+      "dependencies": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 13,
+      "phase": "P3",
+      "title": "P3.1: Implement HTA Branch Re-scoping (Backend & Basic UI)",
+      "description": "Implement two-phase API (preview/confirm) for re-scoping, collaborative LLM prompting, transactional/audited updates, idempotency, and supportive Streamlit UI, as per PRD v4.0.",
+      "details": "1. **Re-scoping Service (in `HTAService` or new service) (PRD F4.3, 8-P3):\n   - `generate_rescope_preview(...)`: LLM generates revised `RoadmapStep`s. Create diff. Store preview (e.g., Redis/DB cache with TTL). Return diff summary & token.\n   - `apply_rescope_changes(...)`: Apply to `RoadmapManifest` & `HTANodeModel`s transactionally, with audit logging, if confirmed.\n   - LLM Prompt: Collaborative framing, validate user's input, guided by initial principles (Task #P0.1) and then Voice & Tone Guide (Task #P3.2) (PRD Sec 8-P3).\n   - Performance: LLM part <3s; diff/commit quick.\n2. **API Endpoints & DTOs (`routers/hta.py` or similar) (PRD F4.3):\n   - `POST /nodes/{node_id}/rescope/preview`, `POST /nodes/{node_id}/rescope/confirm`.\n   - DTOs: `RescapeRequest`, `RescapePreviewResponse` (with `collaborative_framing`), `RescapeConfirmRequest`, `RescapeConfirmResponse` (with `acknowledgment`). Design for idempotency.\n3. **Streamlit UI (`streamlit_app.py`) (PRD F4.3, 8-P3):\n   - `RescopePreview` component with supportive diff visualization, user control, feedback options.",
+      "testStrategy": "Test re-scoping preview/confirm flows, transactional integrity, audit logging, idempotency. Verify collaborative messaging. Test performance. User test UI for supportiveness and control.",
+      "status": "pending",
+      "dependencies": [
+        3,
+        4,
+        7,
+        10,
+        12
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 14,
+      "phase": "P3",
+      "title": "P3.2: Conduct UX, Performance & Brand Validation Sprint; Finalize Voice & Tone Guide",
+      "description": "Run formal validation sprint (3-5 users) for usability, perceived performance, and brand resonance. Refine and finalize 1-page 'Voice & Tone Guide', as per PRD v4.0.",
+      "details": "1. **Execute Validation Sprint (PRD Sec 8-P3):\n   - Test core flows: roadmap creation, completion, expansion, re-scoping, phase notifications.\n   - Measure perceived vs. actual latency. Collect qualitative feedback on supportive scaffolding, responsiveness, language.\n   - **Brand Validation**: Test \"Brand Hypotheses\" (Task #P2.5 output); assess metaphor resonance, voice/tone clarity and supportiveness.\n2. **Deliverables / Outputs:**\n   - Prioritized list of top usability issues & performance bottlenecks.\n   - Summary of user confidence impact.\n   - **Finalized 1-page \"Voice & Tone Guide\" (Deliverable)**: Based on P2.5 & P3 feedback. Include principles, approved terminology, do/don't examples, LLM prompting guidance. DoD: ≥80% positive resonance with metaphor/voice from P2.5/P3 feedback participants (PRD Sec 2).",
+      "testStrategy": "Record sessions. Compare perceived vs. actual latency. Standardized scoring for feedback. Use report to guide P4. Ensure Voice & Tone Guide is actionable.",
+      "status": "pending",
+      "dependencies": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "priority": "critical"
+    },
+    {
+      "id": 15,
+      "phase": "P3",
+      "title": "P3.3: Implement End-to-End (E2E) Testing Framework (API-focused)",
+      "description": "Establish an E2E testing framework using `pytest` and `httpx` (or similar) for API-level tests covering core user journeys and data consistency, as per PRD v4.0.",
+      "details": "1. **Framework Setup (PRD Sec 8-P3):\n   - Configure `pytest` with `httpx` for making API calls to a test instance of the application.\n   - Setup test data generation/management for E2E scenarios (e.g., pre-defined user, initial goal states).\n2. **Core Journey API Tests:**\n   - Full onboarding flow (set goal/context -> get manifest/HTA).\n   - Sequence of task completions leading to branch expansion.\n   - Sequence of task completions leading to phase completion.\n   - Re-scoping (preview & confirm).\n3. **Key Validations in E2E Tests:**\n   - Data consistency in `RoadmapManifest` (persisted in `HTATreeModel.manifest`) and `HTANodeModel` statuses across operations.\n   - Correct API response status codes and basic payload structure.\n   - Transactional integrity checks where feasible at E2E level (e.g., a failed expansion API call doesn't leave partial data visible via subsequent GET calls).\n   - Basic auth/authz for endpoints (once Task #P4.3 is substantially complete, these tests can be enhanced).",
+      "testStrategy": "E2E API tests run in CI. Cover happy paths for core flows. Ensure tests are reliable and clear on failure. Tests should clean up their data or run against a fresh test DB instance.",
+      "status": "pending",
+      "dependencies": [
+        13
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 16,
+      "phase": "P3",
+      "title": "P3.4: Create Automated Tests for Phase Completion Logic",
+      "description": "Implement automated unit/integration tests simulating task completions to verify major phase detection and next-phase suggestion logic (from Task #P2.2), as per PRD v4.0.",
+      "details": "1. **Test Harness (`tests/core/test_phase_completion.py` or similar) (PRD Sec 8-P3):\n   - Create test fixtures for `RoadmapManifest`s with various phase structures and dependencies.\n   - Mock `HTAService` and `CompletionProcessor` interactions as needed for focused testing of phase logic.\n2. **Simulate Task Completions:** Programmatically update statuses in test `RoadmapManifest` instances and `HTANodeModel` mocks. 3. **Verify Phase Logic (from Task #P2.2):\n   - Correct detection of major phase completion by the `PhaseManager` (or equivalent logic).\n   - Accurate next major phase suggestion (>90% accuracy PRD target).\n   - Test edge cases: no next phase, multiple possible next phases (how to prioritize?), etc.\n4. **Test Notification Triggers:** Ensure conditions for triggering phase completion notifications (even if just internal events at this stage) are met correctly.",
+      "testStrategy": "Cover diverse manifest structures. Test different completion sequences. Validate accuracy of next phase suggestions against PRD metric. Integrate into CI.",
+      "status": "pending",
+      "dependencies": [
+        8,
+        11
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 17,
+      "phase": "P4",
+      "title": "P4.1: Implement UX, Performance & Branding Optimizations",
+      "description": "Apply critical fixes and refinements based on P3 Validation Sprint feedback, focusing on usability, performance, and full alignment with the Voice & Tone Guide, as per PRD v4.0.",
+      "details": "1. **UX & Performance Refinement Checkpoint (PRD Sec 8-P4):\n   - Review P3 validation report (Task #P3.2). Prioritize and implement fixes.\n2. **LLM Operations & UI Copy (PRD Sec 5, 7, 8-P4):\n   - Refine LLM prompts for efficiency AND ensure strict alignment with the finalized Voice & Tone Guide (Task #P3.2).\n   - Update ALL user-facing UI copy (error messages, notifications, button labels, onboarding text in Streamlit) to be fully consistent with the Voice & Tone Guide.\n3. **UI Component Optimization (Streamlit) (PRD Sec 7):\n   - Address P3 usability issues. If roadmap display with 10-20 nodes was slow, investigate optimization (Streamlit doesn't have easy virtualization; consider simpler display or pagination if truly problematic). Ensure animations/transitions are smooth.\n4. **Re-validate Key Fixes:** Informally with 1-2 original P3 testers if major changes were made.",
+      "testStrategy": "Targeted testing of all fixes. Re-run key P3 test scenarios. Performance profile optimized areas. Thorough review of all UI text against Voice & Tone Guide.",
+      "status": "pending",
+      "dependencies": [
+        14
+      ],
+      "priority": "critical"
+    },
+    {
+      "id": 18,
+      "phase": "P4",
+      "title": "P4.2: Conduct Chaos / Fault-Injection Testing",
+      "description": "Perform targeted chaos/fault-injection testing in a staging environment to verify system resilience, data integrity, and rollback mechanisms, as per PRD v4.0.",
+      "details": "1. **Planning (PRD Sec 3, 8-P4):\n   - Identify critical data-modifying API endpoints and service operations.\n   - Define fault scenarios: DB errors (connection loss, write failure during transaction), LLM API timeouts/errors during multi-step operations (e.g., manifest generation, expansion).\n2. **Execution (Staging/Test Environment) (PRD Sec 8-P4):\n   - Manually trigger or script faults during critical operations.\n   - Verify transactional rollback: check database state and API responses to ensure data consistency or reversion to pre-operation state.\n   - Verify error handling: check for graceful error messages (aligned with Voice & Tone Guide) and detailed server logs (with `trace_id`).\n   - Verify audit trail (Task #P0.1 strategy, P1 impl.) captures relevant failure/rollback details.\n3. **Review & Iterate:** Document findings. Address critical resilience gaps found.",
+      "testStrategy": "Focus on atomicity of operations and data consistency post-failure. Ensure no partial updates or corrupted data. Check logs for clear error reporting and evidence of rollback.",
+      "status": "pending",
+      "dependencies": [
+        15,
+        17
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 19,
+      "phase": "P4",
+      "title": "P4.3: Implement Basic API Security",
+      "description": "Implement JWT authentication (`core/security.py`), basic rate limiting, robust request validation, CORS, and security headers for API endpoints, as per PRD v4.0.",
+      "details": "1. **Authentication (PRD Sec 8-P4):\n   - Finalize JWT-based authentication using `passlib`, `python-jose` as established in `core/security.py`. Ensure your `/token` endpoint in `routers/auth.py` is robust.\n   - Secure token management. Integrate `OAuth2PasswordBearer` dependency (`get_current_active_user` from `dependencies.py`) into all protected API endpoints.\n2. **Rate Limiting:** Implement basic per-user or per-IP rate limiting for key mutating endpoints (e.g., using `slowapi`). 3. **Request Validation:** Ensure all API endpoints use Pydantic models for comprehensive request body/param validation, referencing `Data Validation Rules Catalog` (Task #P0.1). 4. **CORS:** Configure `CORSMiddleware` in `main.py` for Streamlit frontend, limiting origins for production. 5. **Security Headers:** Add basic set via middleware (e.g., `Content-Security-Policy` - lenient for MVP, `X-Content-Type-Options`, `X-Frame-Options`).",
+      "testStrategy": "Test authentication flows (token gen, validation, protected endpoints). Test rate limits. Send invalid/malformed requests to verify validation and error responses. Check CORS and security headers.",
+      "status": "pending",
+      "dependencies": [
+        17
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 20,
+      "phase": "P4",
+      "title": "P4.4: Finalize Documentation & Develop Data Recovery Playbook",
+      "description": "Complete all internal documentation ('Quickstart', 'Validation Catalog'), ensure user-facing text aligns with 'Voice & Tone Guide', and develop a basic 'Data Recovery Playbook', as per PRD v4.0.",
+      "details": "1. **Internal Documentation (PRD Sec 8-P4):\n   - Update/finalize 'Performance-First Developer Quickstart' (Task #P0.1).\n   - Update 'Data Validation Rules Catalog' (Task #P0.1) with any new rules.\n   - Document P(n+1) optimization strategies and key architectural decisions.\n2. **User-Facing Text Finalization (PRD Sec 7, 8-P4):\n   - Final sweep of ALL UI text (Streamlit app), error messages, and LLM prompt templates (user-visible parts) for 100% compliance with the 'Voice & Tone Guide' (Task #P3.2).\n3. **Data Recovery Playbook (Deliverable) (PRD Sec 3, 8-P4):\n   - Outline basic procedures for: identifying data inconsistencies (via audit logs or queries), snapshotting DB, restoring from backup (assuming backup strategy for DB), and (last resort) steps for manually correcting malformed `RoadmapManifest` JSONB or orphaned `HTANodeModel` records. Primarily for developer/admin use.",
+      "testStrategy": "Review all documentation. Manually verify UI texts against Voice & Tone guide. Walk through Data Recovery Playbook scenarios conceptually or against a test DB.",
+      "status": "pending",
+      "dependencies": [
+        14,
+        17,
+        18
+      ],
+      "priority": "high"
+    },
+    {
+      "id": 21,
+      "phase": "P4",
+      "title": "P4.5: Finalize Koyeb Deployment Configuration",
+      "description": "Finalize Dockerfile, Koyeb service configurations (`koyeb.yaml` or UI), environment variable setup for production, and deployment/rollback documentation, as per PRD v4.0.",
+      "details": "1. **Production Dockerfile (PRD Sec 8-P4):\n   - Base on `python:3.11.8-slim` (reconcile with Task #P0.1 Python version). `WORKDIR /app`. `COPY requirements.txt`, `pip install`. `COPY . .`. ENV `PYTHONPATH`, `PORT`. Non-root user. CMD `uvicorn forest_app.main:app --host 0.0.0.0 --port $PORT` (or use `entrypoint.sh` if it handles this).\n2. **Koyeb Secure Environment Variables:** Finalize list of all production env vars and document secure configuration in Koyeb (DB, LLM keys, `SECRET_KEY`, `SENTRY_DSN`, `FRONTEND_URL` etc.). 3. **Koyeb Service Configuration (PRD Sec 8-P4):\n   - Define instance size, scaling (min/max 1 for MVP), health checks (e.g., `/health` endpoint in `main.py`), restart policies, custom domains via `koyeb.yaml` or UI.\n4. **Database Migration Strategy for Deployment:** Ensure Alembic migrations (Task #P0.2) are applied via `deploy.py` script or Koyeb build step. Document rollback. 5. **Deployment Documentation:** Finalize deployment and rollback procedures. Your `deploy.py` and `pre_deploy_check.py` are good starts.",
+      "testStrategy": "Build final Docker image. Test deployment to a Koyeb staging/test service. Verify all production env vars are loaded. Test health checks. Execute DB migration via deployment. Test deployment rollback scenario.",
+      "status": "pending",
+      "dependencies": [
+        1,
+        2,
+        19,
+        20
+      ],
+      "priority": "critical"
+    },
+    {
+      "id": 22,
+      "phase": "P5",
+      "title": "P5.1: Deploy MVP to Koyeb Production & Conduct Self-Evaluation",
+      "description": "Execute final deployment to Koyeb production. Conduct thorough self-testing, monitor initial metrics, document findings, and plan P(n+1), as per PRD v4.0.",
+      "details": "1. **Deploy to Koyeb Production (PRD Sec 8-P5):\n   - Follow finalized deployment procedures (Task #P4.5).\n   - Perform post-deployment smoke tests.\n2. **Comprehensive Self-Testing & Monitoring:**\n   - Execute all core user flows. Verify data integrity, performance against targets, error budget adherence using production monitoring (Task #P0.3).\n   - Evaluate supportive scaffolding and brand voice in live environment.\n   - Monitor LLM API usage/costs, Sentry for errors.\n3. **Documentation & P(n+1) Planning:**\n   - Create MVP evaluation report: strengths, weaknesses, bugs, performance observations.\n   - Prioritize P(n+1) enhancements (PRD Sec 9, stretch tasks like #23, #24), technical debt, and optimizations.",
+      "testStrategy": "Closely monitor logs and metrics for 24-72 hours. Perform core flows as 'first user'. Review audit logs. Execute key steps from Data Recovery Playbook (Task #P4.4) on a non-production restored copy if any concerns.",
+      "status": "pending",
+      "dependencies": [
+        21
+      ],
+      "priority": "critical"
+    },
+    {
+      "id": 23,
+      "phase": "P(n+1)",
+      "title": "Stretch: Implement Next Phase Kick-off LLM Call",
+      "description": "Implement opt-in contextual LLM call to refine the start of the next phase based on recent progress (PRD F4.4.4, Sec 9 - Out of Scope for Lean MVP).",
+      "details": "1. This is a P(n+1) feature as per PRD v4.0 Section 9. 2. If implemented, involves: new LLM prompt, `HTAService` method, opt-in API, UI components, transactional updates.",
+      "testStrategy": "Test LLM prompt effectiveness, user acceptance, impact on plan coherence, and UX of opt-in flow.",
+      "status": "deferred",
+      "dependencies": [],
+      "priority": "low"
+    },
+    {
+      "id": 24,
+      "phase": "P(n+1)",
+      "title": "Stretch: Implement Optional MCP Server Wrapper",
+      "description": "Create a Model Context Protocol (MCP) server interface for integration with other AI tools (PRD Sec 7.1, Sec 9 - Out of Scope for Lean MVP).",
+      "details": "1. This is a P(n+1) feature as per PRD v4.0 Section 9. 2. If implemented, involves: separate entry point (`mcp_server.py`), MCP handlers wrapping core services, conversion utilities, documentation, MCP-specific auth.",
+      "testStrategy": "Test MCP methods, request/response conversion, and integration with a sample MCP client.",
+      "status": "deferred",
+      "dependencies": [],
+      "priority": "low"
+    }
+  ]
+}

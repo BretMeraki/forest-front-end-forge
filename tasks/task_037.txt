@@ -1,0 +1,11 @@
+# Task ID: 37
+# Title: Implement Collapsible Tree UI for React Harness
+# Status: pending
+# Dependencies: 17
+# Priority: medium
+# Description: Implement a simple collapsible tree UI component for the React harness as mentioned in PRD v3.15 section 7. Focus on basic functionality without virtualization or lazy loading. The UI should support the minimal feature set required for the core loop.
+# Details:
+
+
+# Test Strategy:
+

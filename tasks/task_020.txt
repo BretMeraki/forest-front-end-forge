@@ -1,0 +1,18 @@
+# Task ID: 20
+# Title: P4.4: Finalize Documentation & Develop Data Recovery Playbook
+# Status: pending
+# Dependencies: 14, 17, 18
+# Priority: high
+# Description: Complete all internal documentation ('Quickstart', 'Validation Catalog'), ensure user-facing text aligns with 'Voice & Tone Guide', and develop a basic 'Data Recovery Playbook', as per PRD v4.0.
+# Details:
+1. **Internal Documentation (PRD Sec 8-P4):
+   - Update/finalize 'Performance-First Developer Quickstart' (Task #P0.1).
+   - Update 'Data Validation Rules Catalog' (Task #P0.1) with any new rules.
+   - Document P(n+1) optimization strategies and key architectural decisions.
+2. **User-Facing Text Finalization (PRD Sec 7, 8-P4):
+   - Final sweep of ALL UI text (Streamlit app), error messages, and LLM prompt templates (user-visible parts) for 100% compliance with the 'Voice & Tone Guide' (Task #P3.2).
+3. **Data Recovery Playbook (Deliverable) (PRD Sec 3, 8-P4):
+   - Outline basic procedures for: identifying data inconsistencies (via audit logs or queries), snapshotting DB, restoring from backup (assuming backup strategy for DB), and (last resort) steps for manually correcting malformed `RoadmapManifest` JSONB or orphaned `HTANodeModel` records. Primarily for developer/admin use.
+
+# Test Strategy:
+Review all documentation. Manually verify UI texts against Voice & Tone guide. Walk through Data Recovery Playbook scenarios conceptually or against a test DB.

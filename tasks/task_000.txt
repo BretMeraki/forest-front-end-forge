@@ -1,0 +1,26 @@
+# Task ID: 0
+# Title: P0.1: Finalize Core Project Setup & Foundational Standards
+# Status: pending
+# Dependencies: None
+# Priority: critical
+# Description: Solidify project structure, Python environment (3.11.8 as per PRD, current runtime.txt is 3.12.4 - reconcile), configurations, performance targets, data integrity strategies, and developer guidelines, aligning existing setup with PRD v4.0.
+# Details:
+1. **Environment & Config (PRD Sec 8-P0):
+   - Confirm Python version: PRD v4.0 specifies 3.11.8. Your `runtime.txt` shows `python-3.12.4`. Reconcile and update all relevant files (`runtime.txt`, `pyproject.toml`/`requirements.txt`, Dockerfile in Task #P4.5).
+   - Solidify secure `SECRET_KEY` handling (from `settings.py`, `.env`).
+   - Review `settings.py`: Ensure all feature flags from `core/feature_flags.py` (PRD v4.0 Section 6) are present and defaults align with MVP strategy. Add any missing configs (e.g., for audit log, idempotency keys if needed centrally).
+   - Finalize `.env.example` based on `settings.py`.
+   - Deliverable: `Performance-First Developer Quickstart` guide (PRD Sec 8-P0).
+   - Deliverable: Initial `Data Validation Rules Catalog` (PRD Sec 3, 8-P0).
+2. **Performance & Integrity Standards (PRD Sec 2, 3, 8-P0):
+   - Document and confirm P75 latency targets & 0.1% error budget (PRD Sec 2).
+   - Document initial strategies for transactional consistency (REPEATABLE READ default), basic audit trail structure/format, and initial design considerations for API idempotency (PRD Sec 3, 8-P0).
+3. **Alembic Setup (PRD Sec 8-P0):
+   - Verify `alembic.ini` (uses `DB_CONNECTION_STRING` - good) and `env.py` correctly load DB URL and `Base` metadata from `forest_app.persistence.models` for migrations.
+4. **RequestContext & Middleware (PRD Sec 3.1):
+   - Refine existing `forest_app.core.models.RequestContext` to include `timestamp_utc`, `feature_flags`, and Pydantic `model_config(frozen=True, extra='forbid', ...)`. Implement `@lru_cache` for `has_feature` (ensure `self` is hashable or adapt cache strategy if instance method used on mutable `self`).
+   - Implement/Verify `get_request_context` FastAPI dependency in `forest_app.dependencies.py`.
+   - Implement/Verify `PerformanceMiddleware` and/or enhance existing `LoggingMiddleware` in `forest_app.main.py` for API timing, `X-Process-Time` header, and `trace_id` logging.
+
+# Test Strategy:
+Verify Python version alignment. Test env var loading, `SECRET_KEY` security. Confirm Alembic offline/online migrations run. Benchmark `RequestContext` and `PerformanceMiddleware`. Review all P0 deliverables.

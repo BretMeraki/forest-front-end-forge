@@ -1,0 +1,16 @@
+# Task ID: 7
+# Title: P1.4: Implement HTAService (Manifest to HTA Tree & Core Ops)
+# Status: pending
+# Dependencies: 1, 2, 3, 6
+# Priority: critical
+# Description: Refine `HTAService` (`core/services/hta_service.py`) to generate HTA trees from manifests, manage HTA/Manifest synchronization, and support core operations with transactional consistency, audit logging, and data integrity, as per PRD v4.0.
+# Details:
+1. **HTAService Methods (PRD Sec 3.4, 8-P1):
+   - `generate_initial_hta_from_manifest(manifest: RoadmapManifest, user_id: UUID, request_context: RequestContext) -> HTATreeModel`: Use `manifest.get_topological_sort()`. Convert `RoadmapStep`s to `HTANodeModel`s. Store `manifest.model_dump_json()` in `HTATreeModel.manifest`. Ensure <1s target (PRD Sec 2). Implement with transactional consistency and audit logging.
+   - Review and align existing methods like `initialize_task_hierarchy`, `update_task_state` (likely becomes `update_node_status`), `get_task_hierarchy` (for `GET /hta/state`), `load_tree`, `save_tree` with PRD v4.0. Emphasize `RoadmapManifest` as the source of truth for structure, with `HTANodeModel` primarily for status and HTA-specific metadata/state. All mutations must be transactional and audited (PRD Sec 3).
+2. **HTA/Tree API Endpoints (`routers/hta.py`, new `/trees` router if needed) (PRD Sec 8-P1):
+   - `GET /hta/state` (or similar): Retrieves HTA view derived from `HTATreeModel.manifest` and `HTANodeModel` statuses.
+   - `POST /trees` (if not fully covered by onboarding Task #P1.3): Endpoint to create a new tree. Must be idempotent if applicable (PRD Sec 3, Task #P0.1).
+
+# Test Strategy:
+Test `generate_initial_hta_from_manifest` for speed (<1s) and correctness. Test transactional integrity of all HTA/Manifest modifying operations (simulated failures, rollbacks). Verify audit logs. Test API endpoints.

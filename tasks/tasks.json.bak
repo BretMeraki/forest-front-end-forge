@@ -1,0 +1,436 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Implement RequestContext Dataclass and FastAPI Integration",
+      "description": "Create the RequestContext dataclass as specified in R3.1 for passing request-scoped information (user ID, trace ID, timestamp, feature flags) and integrate it into FastAPI using dependency injection.",
+      "details": "Python dataclass definition:\n```python\nfrom dataclasses import dataclass\nfrom uuid import UUID, uuid4\nfrom datetime import datetime, timezone\nfrom typing import Dict\n\n@dataclass\nclass RequestContext:\n    user_id: UUID\n    trace_id: str # Consider UUID\n    timestamp: datetime # UTC\n    feature_flags: Dict[str, bool]\n    # mcp_version: str = \"internal-forest-mvp-3.1\"\n```\nCreate a FastAPI dependency `get_request_context_dependency` that constructs and returns this object. Ensure `timestamp` is timezone-aware (UTC).",
+      "testStrategy": "Unit test `RequestContext` creation, ensuring correct types and default values. Integration test FastAPI endpoints that inject `RequestContext` to verify it's correctly populated (e.g., with user_id from auth, new trace_id, current UTC timestamp, and feature flags).",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 2,
+      "title": "Define HTANodeModel SQLAlchemy Model",
+      "description": "Define the HTANodeModel SQLAlchemy model as per R3.2.1 in `forest_app/hta_tree/hta_models.py`. This model will represent nodes in the Hierarchical Task Analysis tree.",
+      "details": "Key Fields: `id` (UUID, PK), `user_id` (UUID, FK to users.id), `parent_id` (UUID, FK to hta_nodes.id, nullable=True), `tree_id` (UUID, FK to hta_trees.id), `title` (String), `description` (Text), `is_leaf` (Boolean, default=True), `status` (Enum(\"pending\",\"in_progress\",\"completed\"), default=\"pending\"), `created_at`, `updated_at`. \nJSONB Fields: \n`journey_summary` (JSONB, default={}): e.g., {\"total_tasks_completed_here\": 0, \"last_user_mood_tag\": \"positive\"}. \n`branch_triggers` (JSONB, default={}): e.g., {\"expand_now\": false, \"completion_count_for_expansion_trigger\": 3, \"current_completion_count\": 0}.",
+      "testStrategy": "Unit test model instantiation, default values for `is_leaf`, `status`, `journey_summary`, `branch_triggers`. Verify that JSONB fields can store and retrieve complex JSON structures correctly. Ensure relationships (FKs) are defined.",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 3,
+      "title": "Define MemorySnapshotModel SQLAlchemy Model",
+      "description": "Define the MemorySnapshotModel SQLAlchemy model as per R3.2.2 in `forest_app/snapshot/models.py`. This model will store structured episodic information related to user interactions and task completions.",
+      "details": "Key Fields: `id` (UUID, PK), `user_id` (UUID, FK to users.id), `created_at` (DateTime, default=func.now()). \nREFINED `data` Field (JSONB): Example structure:\n```json\n{\n  \"recent_tasks_log\": [\n    { \"hta_node_id\": \"uuid\", \"title\": \"Task title\", \"completed_at\": \"iso_timestamp\", \"user_mood_tag\": \"energized\", \"reflection_keywords\": [\"quick_win\"] }\n  ],\n  \"general_reflections\": [\n    {\"timestamp\": \"iso_timestamp\", \"reflection_text_summary_keywords\": [\"focus\", \"clarity\"], \"sentiment_score\": 0.7 }\n  ]\n}\n```",
+      "testStrategy": "Unit test model instantiation and default values, especially `created_at`. Verify the `data` JSONB field can correctly store and retrieve the specified nested structure for `recent_tasks_log` and `general_reflections`.",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 4,
+      "title": "Implement SnapshotRepository for Database Interactions",
+      "description": "Implement a SnapshotRepository class to encapsulate all database interactions for HTANodeModel and MemorySnapshotModel, promoting a clean separation of concerns for data access logic.",
+      "details": "The repository should provide methods for Create, Read, Update, Delete (CRUD) operations for both `HTANodeModel` and `MemorySnapshotModel`. Use SQLAlchemy for database operations. Example methods: `add_hta_node`, `get_hta_node_by_id`, `update_hta_node`, `add_memory_snapshot`, `get_memory_snapshots_for_user`.",
+      "testStrategy": "Unit test all repository methods using a mocked SQLAlchemy session and engine. Verify correct query construction and data handling for CRUD operations on both models.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 5,
+      "title": "Setup Alembic Migrations for Database Schema",
+      "description": "Set up Alembic for database schema migrations. Create initial migration scripts based on HTANodeModel and MemorySnapshotModel definitions and apply them to the PostgreSQL database.",
+      "details": "Initialize Alembic in the project. Generate autogenerated or manually crafted migration scripts for the `hta_nodes` and `memory_snapshots` tables. Ensure all columns, types (including JSONB), constraints, foreign keys, and indexes are correctly defined in migrations.",
+      "testStrategy": "Run `alembic upgrade head` to apply migrations to a test database. Inspect the database schema to confirm it matches the SQLAlchemy model definitions. Test `alembic downgrade` and re-upgrade.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 6,
+      "title": "Configure Feature Flag System and Disable Non-MVP Modules",
+      "description": "Implement or verify the existing feature flag system (R6.1) located at `forest_app/core/feature_flags.py`. Ensure all non-MVP modules are disabled by default using `is_enabled()` checks, possibly configured via `settings.py` or environment variables.",
+      "details": "Non-MVP modules to disable include: ResistanceEngine, ShadowEngine, PatternID, NarrativeModes, XPMastery, OfferingReward, DesireEngine, DevelopmentIndex, FinancialReadiness, ArchetypeManager (advanced features), WitheringManager, SoftDeadlineManager, HarmonicFramework, PracticalConsequenceEngine, Readiness module components. The `is_enabled('FEATURE_NAME')` function should return false for these features unless explicitly enabled for testing.",
+      "testStrategy": "Unit test the `is_enabled()` function with various flag states. Manually verify or write integration tests to confirm that attempting to access or invoke functionalities of disabled modules either does nothing, returns a specific 'disabled' response, or is not possible due to DI wiring.",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 7,
+      "title": "Streamline Orchestrator and Processors for MVP Scope",
+      "description": "Streamline ForestOrchestrator (`forest_app/core/orchestrator.py`) and Processors (ReflectionProcessor, CompletionProcessor) to only invoke MVP-relevant services and logic as per R6.2. Update DI setup in `containers.py` to reflect MVP scope.",
+      "details": "Review and refactor the mentioned core components. Remove or comment out calls to services/logic related to feature-flagged-off modules. Ensure the dependency injection container (`containers.py`) only wires up dependencies essential for the MVP. For non-MVP dependencies, provide stubs or ensure they are not instantiated if their features are disabled.",
+      "testStrategy": "Code review of orchestrator, processors, and DI container. Unit tests for these components should pass, mocking only MVP-relevant dependencies. Integration tests should show that only MVP workflows are executed.",
+      "priority": "high",
+      "dependencies": [
+        6
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 8,
+      "title": "Resolve Critical Startup/Dependency Errors and Standardize Python Version",
+      "description": "Resolve any critical startup errors, particularly those related to `psycopg2` (PostgreSQL driver), `google.generativeai` (LLM client library), and `SECRET_KEY` configuration. Standardize on Python 3.11.8 as per `runtime.txt`.",
+      "details": "Ensure `psycopg2-binary` or `psycopg2` is correctly installed and can connect to PostgreSQL. Configure `google.generativeai` API key via environment variables. Set a `SECRET_KEY` for FastAPI application security. Verify `runtime.txt` specifies `python-3.11.8`.",
+      "testStrategy": "Successfully start the FastAPI application using Uvicorn locally without any import errors or critical runtime exceptions. A basic health check endpoint should return a 200 OK response.",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 9,
+      "title": "Implement Unified Entrypoint Script",
+      "description": "Implement or verify the unified Uvicorn-only `flexible_entrypoint.sh` script for all environments, configurable by environment variables (Section 8).",
+      "details": "The shell script should correctly launch the Uvicorn server, allowing for configuration of host, port, workers, and other Uvicorn settings via environment variables. This script will be used for local development and deployment (e.g., on Koyeb).",
+      "testStrategy": "Test the entrypoint script locally with different environment variable settings (e.g., for development and production modes). Verify that Uvicorn starts with the correct configuration.",
+      "priority": "medium",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 10,
+      "title": "Implement Task Completion API Endpoint",
+      "description": "Implement a FastAPI API endpoint that allows a user to mark an HTA leaf node as 'completed'. This endpoint will be called by the React test harness.",
+      "details": "Endpoint path could be e.g., `POST /hta_nodes/{hta_node_id}/complete`. It should take `hta_node_id` as a path parameter. The handler will use the injected `RequestContext` and interact with `CompletionProcessor` or `HTAService`.",
+      "testStrategy": "API integration test: Send a POST request to the endpoint with a valid `hta_node_id`. Verify a 200 OK response. Check the database to ensure the corresponding `HTANodeModel` status is updated to 'completed'.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 11,
+      "title": "Implement CompletionProcessor Logic (Leaf Node Update & Memory Snapshot Log)",
+      "description": "Implement the first part of CompletionProcessor logic (F4.1.1, F4.1.2): update the completed leaf HTANodeModel's status to 'completed' and append a structured entry to MemorySnapshotModel.data['recent_tasks_log'].",
+      "details": "The `CompletionProcessor` (or a similar service called by the API endpoint) will: \n1. Update `HTANodeModel.status` to 'completed'.\n2. Create a new `MemorySnapshotModel` entry or update an existing one. The `data['recent_tasks_log']` array should be appended with an object containing: `hta_node_id`, `title` of the completed task, `completed_at` (ISO timestamp), and any `user_mood_tag` or `reflection_keywords` passed from the UI (R6.2).",
+      "testStrategy": "Unit test the `CompletionProcessor` method responsible for this logic. Mock database interactions. Verify that the correct updates are made to `HTANodeModel` and a new log entry with the correct structure is prepared for `MemorySnapshotModel`.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3,
+        4,
+        10
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 12,
+      "title": "React Test Harness: User Onboarding & Goal Input UI",
+      "description": "Develop basic React components for user onboarding (simplified for MVP) and for inputting a goal with initial context. This interaction should trigger the backend to create and persist the Top Node and initial Trunk of the HTA tree (R2.2.1, R2.2.3).",
+      "details": "Frontend components: Input field for goal title, textarea for initial context. On submission, call a backend API endpoint (to be created in task 15) that handles initial HTA generation. Display a success message or initial tasks.",
+      "testStrategy": "Manual E2E test: Use the React UI to input a goal and context. Verify that the backend API is called and that the Top Node and initial HTA trunk tasks are created in the PostgreSQL database. The UI should reflect this, perhaps by showing the newly created top-level tasks.",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 13,
+      "title": "React Test Harness: Display HTA Tasks and Task Completion UI with Conditional Reflection",
+      "description": "Develop React components to display HTA-derived tasks fetched from the backend. Implement UI elements to allow users to mark tasks as complete. Include the conditional reflection UI (R7.2) - an unobtrusive option to add mood tags/keywords upon task completion.",
+      "details": "Fetch and display tasks in a list or tree view. Each task should have a 'complete' button/checkbox. Upon clicking 'complete', call the task completion API (task 10). After marking complete, show a subtle '+ reflect' link/button. If clicked, show input fields for mood tags/keywords. Default to no reflection prompt.",
+      "testStrategy": "Manual E2E test: View tasks. Mark a task complete; verify UI updates and backend state change. Test the conditional reflection flow: complete a task without reflection, then complete another task and add reflection data. Verify reflection data is sent to backend.",
+      "priority": "high",
+      "dependencies": [
+        10,
+        11,
+        12
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 14,
+      "title": "Implement React API Client Module",
+      "description": "Create a dedicated API client module within the React application (R7.1) to centralize and manage all HTTP communication with the FastAPI backend.",
+      "details": "Use `fetch` API or a library like `axios`. The client should handle base URL configuration, sending requests (GET, POST, etc.), processing responses, error handling, and potentially managing authentication tokens if user authentication is implemented. Provide methods like `apiClient.getTasks()`, `apiClient.completeTask(taskId, reflectionData)`. ",
+      "testStrategy": "Unit test API client methods by mocking HTTP requests/responses (e.g., using `jest.mock` or `msw`). Integration test by making actual calls from React components to a running backend for key API interactions.",
+      "priority": "high",
+      "dependencies": [
+        8
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 15,
+      "title": "Implement Initial HTA Generation (Top Node & Trunk) on Goal Input",
+      "description": "Implement backend logic, likely within HTAService, to generate and persist the initial HTA structure (Top Node representing the goal, and an initial Trunk of tasks) upon receiving a user's goal and context from the onboarding UI.",
+      "details": "Create an API endpoint (e.g., `POST /hta_trees`) that accepts goal title and context. This service logic will: \n1. Create a `HTANodeModel` for the Top Node (goal). \n2. Generate 1-3 initial child `HTANodeModel` instances (Trunk tasks). For MVP, this generation can be simple (e.g., predefined sub-goals or a very basic LLM call if necessary, though PRD implies direct creation for R2.2.1). \n3. Persist these nodes using `SnapshotRepository`. Link them via `parent_id` and a common `tree_id`.",
+      "testStrategy": "Unit test the HTA creation logic in `HTAService`. Integration test the API endpoint: send a goal and context, then query the database to verify the correct HTA structure (Top Node and initial children) is created and persisted with correct titles, descriptions, and relationships.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 16,
+      "title": "Implement Top Node Context Provider: get_llm_context_payload",
+      "description": "Implement the `get_llm_context_payload` method (R3.3) within HTAService or a new TopNodeService. This method will assemble the context required for LLM interactions.",
+      "details": "Method signature: `get_llm_context_payload(top_node_id: UUID, request_context: RequestContext, purpose: str) -> Dict`. \nLogic: \n1. Retrieve `journey_summary` from the specified Top Node `HTANodeModel`. \n2. Retrieve relevant recent entries (e.g., last 3-5) from `MemorySnapshotModel.data['recent_tasks_log']` for the user via `SnapshotRepository`. \n3. Combine original goal (from Top Node title/description), onboarding context (if stored), Top Node's `journey_summary`, and summarized recent tasks/reflections into a structured dictionary or formatted string.",
+      "testStrategy": "Unit test `get_llm_context_payload`. Mock database calls. Verify that it correctly retrieves data from `HTANodeModel` and `MemorySnapshotModel`, and assembles the payload in the expected structure. Test with various states of `journey_summary` and `recent_tasks_log`.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 17,
+      "title": "Implement Summarization LLM Call in get_llm_context_payload with SLO & Fallback",
+      "description": "Integrate an LLM call within `get_llm_context_payload` for summarizing `recent_tasks_log` entries (F5.1), adhering to the SLO (R4.2.2: <500ms, <=50 response tokens) and implementing a fallback mechanism.",
+      "details": "Use `LLMClient` (task 20) to call `google.generativeai`. \nPrompt (F5.1): \"Summarize these recently completed tasks into 3 concise bullet points (max 50 tokens total). For each, highlight the key outcome and any expressed mood or feeling. Example: - Completed 'Outline Chapter 1' (felt: accomplished). - Meditated for 10 mins (felt: calm).\" \nSLO: Measure call latency and token usage. \nFallback (R4.2.2): If SLO breached or LLM fails, concatenate titles/key fields of the last 3 `recent_tasks_log` entries.",
+      "testStrategy": "Unit test the summarization logic: mock LLMClient for success, failure, and SLO breach scenarios. Verify correct prompt usage. Test fallback logic execution. Measure actual LLM call performance against SLO with sample data.",
+      "priority": "high",
+      "dependencies": [
+        16
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 18,
+      "title": "Implement Top Node Context Provider: update_top_node_journey_data",
+      "description": "Implement the `update_top_node_journey_data` method (R3.3) to update the `journey_summary` field of the Top Node HTANodeModel and potentially `branch_triggers` on relevant parent nodes based on aggregated task outcomes and reflections.",
+      "details": "Method signature: `update_top_node_journey_data(top_node_id: UUID, request_context: RequestContext, task_completion_data: Dict, reflection_data: Optional[Dict])`. \nThis method will be called during the task completion roll-up process (task 19). It should update fields in `HTANodeModel.journey_summary` like `total_tasks_completed_here`, `last_user_mood_tag`, `key_learnings_summary` (if applicable).",
+      "testStrategy": "Unit test `update_top_node_journey_data`. Mock database interactions. Provide sample `task_completion_data` and `reflection_data`. Verify that the `journey_summary` of the specified Top Node is updated correctly in the database.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 19,
+      "title": "Implement CompletionProcessor Logic (Roll-Up to Parent Nodes and Top Node)",
+      "description": "Extend CompletionProcessor or HTAService for recursive parent node updates upon task completion (F4.1.3). This includes updating parent's `journey_summary` fields and `branch_triggers.current_completion_count`, eventually calling `update_top_node_journey_data` for the Top Node.",
+      "details": "When a leaf node is completed: \n1. Increment `journey_summary['total_tasks_completed_here']` on the immediate parent. \n2. Update `journey_summary['last_user_mood_tag']` if reflection provided. \n3. Increment parent node's `branch_triggers['current_completion_count']`. \n4. Recursively apply these updates up to the Top Node. The Top Node's `journey_summary` update should be handled via `update_top_node_journey_data`.",
+      "testStrategy": "Unit test the roll-up logic. Create a sample HTA tree structure in a test DB or mocks. Complete a leaf task and verify that all direct and indirect parent nodes (up to the Top Node) have their `journey_summary` and `branch_triggers` (where applicable) fields updated correctly as per the roll-up rules.",
+      "priority": "high",
+      "dependencies": [
+        11,
+        18
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 20,
+      "title": "Implement LLMClient for Google Generative AI",
+      "description": "Create an LLMClient class in `forest_app/integrations/llm.py` to encapsulate interactions with the `google.generativeai` API. This client will be used for summarization and HTA generation.",
+      "details": "The client should handle API key configuration (from environment variables). Provide methods like `generate_text(prompt: str, max_tokens: int)` or similar. Implement error handling for API calls (e.g., network issues, API errors).",
+      "testStrategy": "Unit test `LLMClient` methods, mocking the `google.generativeai` library calls. Test successful responses, error handling, and retry logic if implemented. Perform a basic integration test by making an actual simple call to the Google API to confirm connectivity and authentication.",
+      "priority": "high",
+      "dependencies": [
+        8
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 21,
+      "title": "HTAService: Query for Nodes Flagged for Expansion",
+      "description": "Implement logic in HTAService to query PostgreSQL for HTANodeModel instances where the JSONB field `branch_triggers.expand_now == true` (F4.2.1).",
+      "details": "The `HTAService` will have a method that periodically or on demand queries the `hta_nodes` table. The query should efficiently find all nodes where `(branch_triggers->>'expand_now')::boolean = true`. This method will return a list of nodes that need new child tasks generated.",
+      "testStrategy": "Unit test the service method. Mock `SnapshotRepository` or use a test database. Create sample `HTANodeModel` instances with `branch_triggers.expand_now` set to true and false. Verify the query correctly identifies only the nodes flagged for expansion.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 22,
+      "title": "HTAService: HTA Generation Prompt Logic and LLM Interaction",
+      "description": "Implement HTA generation logic in HTAService (F4.2.3). For each node flagged for expansion, use context from `get_llm_context_payload` (F4.2.2) and the HTA Generation Prompt (F5.2) to call LLMClient for new task generation.",
+      "details": "For each triggered parent node: \n1. Call `get_llm_context_payload` (task 16) to get rich context. \n2. Construct the HTA Generation Prompt (F5.2) using this context and parent node details. Prompt: \"You are 'The Arbiter,'... Based on their overall goal ({TopNode.title}), journey summary ({TopNode.journey_summary_text}), and recent progress ({summarized_recent_task_bullets}), please generate 3-5 engaging next-step tasks or micro-actions under this branch ('{parent_node.title}'). Frame each task with fun/celebration...\" \n3. Call `LLMClient.generate_text` with this prompt.",
+      "testStrategy": "Unit test the prompt construction logic. Test the interaction with `LLMClient` (mocked). Verify that the generated prompt includes all required context elements. For an integration test (can be manual initially), inspect the LLM-generated tasks for relevance, engagement, and adherence to the 'Fun & Joy' rubric.",
+      "priority": "high",
+      "dependencies": [
+        16,
+        17,
+        20,
+        21
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 23,
+      "title": "HTAService: Persist New Child HTA Nodes and Reset Parent Flags",
+      "description": "Implement logic in HTAService to parse LLM response, persist new child HTANodeModel instances under the triggered parent node (F4.2.4), and then reset the parent node's `branch_triggers.expand_now` to false and `branch_triggers.current_completion_count` to 0 (F4.2.5).",
+      "details": "After receiving new task suggestions from LLM: \n1. Parse the LLM response to extract individual tasks (title, description). \n2. For each new task, create and persist a new `HTANodeModel` instance, setting its `parent_id` to the triggered parent node's ID and `tree_id` appropriately. New nodes are leaves by default. \n3. Update the parent `HTANodeModel`: set `branch_triggers.expand_now = false` and `branch_triggers.current_completion_count = 0`.",
+      "testStrategy": "Unit test the parsing of LLM responses and creation of new `HTANodeModel` instances. Test the logic for updating the parent node's `branch_triggers`. Integration test: trigger an expansion, verify new child nodes are correctly created and linked in the DB, and the parent node's flags are reset.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        4,
+        22
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 24,
+      "title": "React Test Harness: Display Newly Expanded HTA Tasks",
+      "description": "Update the React test harness to fetch and display newly generated/expanded HTA tasks under their respective parent nodes. The UI should dynamically update or provide a refresh mechanism.",
+      "details": "When an HTA branch expands, the React application needs to be ableto fetch these new tasks. This might involve re-fetching the tasks for a specific parent or the entire tree. Update the UI to render these new tasks, maintaining the hierarchical display.",
+      "testStrategy": "Manual E2E test: In the React UI, perform actions that trigger HTA expansion on the backend. Verify that the new tasks appear correctly under the correct parent node in the UI without requiring a full page reload if possible.",
+      "priority": "medium",
+      "dependencies": [
+        13,
+        23
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 25,
+      "title": "Implement Branch Trigger Activation Logic",
+      "description": "Implement the logic within the task completion roll-up (F4.1.3) to set `branch_triggers.expand_now = true` on a parent node when its `branch_triggers.current_completion_count` reaches the configured `completion_count_for_expansion_trigger`.",
+      "details": "This is an extension of the roll-up logic (task 19). After incrementing `current_completion_count` on a parent node, check if it equals `completion_count_for_expansion_trigger`. If true, set `branch_triggers.expand_now = true` on that parent node.",
+      "testStrategy": "Unit test this specific conditional logic within the roll-up process. Integration test: Complete a series of tasks under a parent node until `current_completion_count` meets the trigger threshold. Verify that `branch_triggers.expand_now` is set to `true` in the database for that parent node.",
+      "priority": "high",
+      "dependencies": [
+        19
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 26,
+      "title": "Implement Configurable `completion_count_for_expansion_trigger`",
+      "description": "Make the `completion_count_for_expansion_trigger` value configurable (R4.1.4), either via `settings.py` (loaded from environment variables) or from a specific configuration field in the database (e.g., Top Node's `journey_summary` or a tree-level settings document).",
+      "details": "Preferred MVP method: Load from `settings.py` which reads from an environment variable. Example: `HTA_EXPANSION_TRIGGER_COUNT = os.getenv('HTA_EXPANSION_TRIGGER_COUNT', 3)`. The logic in task 25 should read this configured value instead of using a hardcoded number.",
+      "testStrategy": "Test the system with different values for `HTA_EXPANSION_TRIGGER_COUNT` (e.g., 1, 3, 5). Verify that HTA branches trigger expansion only after the configured number of child tasks are completed.",
+      "priority": "medium",
+      "dependencies": [
+        25
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 27,
+      "title": "Iterate on LLM Prompts for 'Fun & Joy' and Contextual Relevance",
+      "description": "Iteratively refine the LLM prompts for Summarization (F5.1) and HTA Generation (F5.2) to enhance the 'Fun & Joy' aspect and improve the contextual relevance and engagement of LLM-generated content.",
+      "details": "This is an ongoing process of prompt engineering. Experiment with different phrasings, examples, and instructions in the prompts. Focus on achieving the desired tone ('poetic, grounded, emotionally attuned AI guide') and ensuring tasks are framed positively and engagingly. Review LLM outputs against the 'Fun & Joy' rubric (F5.2).",
+      "testStrategy": "Qualitative self-testing using the React test harness (R2.2.5). Evaluate generated task descriptions and summarizations. Does the language feel context-aware, engaging, and joyful in >75% of interactions? Adjust prompts based on observations.",
+      "priority": "medium",
+      "dependencies": [
+        17,
+        22
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 28,
+      "title": "Thorough End-to-End Testing",
+      "description": "Conduct thorough end-to-end testing of the entire MVP flow, covering all success metrics defined in Section 2 of the PRD. This includes user onboarding, goal setting, task completion, memory logging, context updates, HTA expansion, and UI interactions.",
+      "details": "Develop a test plan covering all major user stories and system functionalities. Key metrics to validate: \n- HTA Generation & Persistence (R2.2.1)\n- Semantic-Episodic Memory Loop (R2.2.2: task completion logs, journey_summary updates, selective expansion)\n- Contextual HTA Expansion (R2.2.3: expansion only on triggered nodes, summarizer SLO)\n- System Stability (R2.2.4: no critical errors)\n- Engagement Feel (R2.2.5: qualitative)",
+      "testStrategy": "Execute the comprehensive test plan. This involves using the React harness to simulate user flows, inspecting database states, checking application logs, and qualitatively assessing the user experience. Document test results and any issues found.",
+      "priority": "high",
+      "dependencies": [
+        12,
+        13,
+        15,
+        19,
+        23,
+        24,
+        25,
+        26
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 29,
+      "title": "Prepare Koyeb Deployment Configurations",
+      "description": "Prepare all necessary configurations for deploying the MVP application to Koyeb. This includes finalizing the Dockerfile, setting up environment variables on Koyeb, and defining build and service settings.",
+      "details": "Ensure the `Dockerfile` is optimized for production. List all required environment variables (e.g., `DATABASE_URL`, `GOOGLE_API_KEY`, `SECRET_KEY`, `HTA_EXPANSION_TRIGGER_COUNT`). Configure Koyeb service settings (e.g., instance size, scaling, health checks using the `flexible_entrypoint.sh`).",
+      "testStrategy": "Review Dockerfile and Koyeb configuration settings. If possible, perform a test deployment to a staging environment on Koyeb to verify the deployment process and configuration before deploying to production.",
+      "priority": "medium",
+      "dependencies": [
+        8,
+        9,
+        28
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 30,
+      "title": "Deploy MVP to Koyeb and Conduct Initial Self-Evaluation",
+      "description": "Deploy the finalized MVP to the Koyeb production environment. After deployment, begin extensive self-testing and usage of the live system to gather initial insights, monitor performance, and identify areas for tuning.",
+      "details": "Follow Koyeb's deployment procedures. Monitor application logs and performance metrics on Koyeb dashboard. Use the system as an end-user would to experience the 'Living HTA & Semantic Memory' flow.",
+      "testStrategy": "Verify successful deployment and accessibility of the application on its Koyeb URL. Perform smoke tests on the live environment. Begin systematic self-evaluation against the MVP goals and success metrics. Document findings for future iterations.",
+      "priority": "high",
+      "dependencies": [
+        29
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 31,
+      "title": "Implement HTA Node Model Persistence",
+      "description": "Create SQLAlchemy model for HTANodeModel to enable persistent storage of Hierarchical Task Analysis nodes in PostgreSQL",
+      "details": "",
+      "testStrategy": "",
+      "status": "pending",
+      "dependencies": [],
+      "priority": "high",
+      "subtasks": []
+    },
+    {
+      "id": 32,
+      "title": "Implement RequestContext for In-Process Context Propagation",
+      "description": "Create a RequestContext dataclass to pass essential request-scoped information through service layers using FastAPI dependency injection",
+      "details": "",
+      "testStrategy": "",
+      "status": "pending",
+      "dependencies": [],
+      "priority": "high",
+      "subtasks": []
+    }
+  ]
+}

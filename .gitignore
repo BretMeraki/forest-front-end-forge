@@ -4,6 +4,7 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+<<<<<<< HEAD
 pnpm-debug.log*
 lerna-debug.log*
 
@@ -17,8 +18,42 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+=======
+dev-debug.log
+
+# Dependency directories
+node_modules/
+venv/
+
+# Specific project exclusions
+__pycache__/
+alembic/
+docs/
+public/
+ForestFInal-main-20250511T022854Z-001.zip
+.DS_Store
+venv-powershell/
+venv*
+
+# Environment variables
+.env
+
+# Editor directories and files
+.idea
+.vscode
+>>>>>>> 60653be (Initial commit of Forest Front-end Forge project)
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+<<<<<<< HEAD
+=======
+
+# OS specific
+.DS_Store
+
+# Task files
+
+mcp_config.json
+>>>>>>> 60653be (Initial commit of Forest Front-end Forge project)

@@ -1,0 +1,21 @@
+# Task ID: 1
+# Title: P0.2: Solidify Core SQLAlchemy Models & Initial Migrations
+# Status: done
+# Dependencies: None
+# Priority: critical
+# Description: Finalize SQLAlchemy models (`User`, `HTATree`, `HTANode`, `MemorySnapshot`, `TaskFootprint`, `ReflectionLog`) with all PRD v4.0 requirements (UUID PKs, JSONB, critical indexes). Generate/update Alembic migrations.
+# Details:
+1. **`UserModel.id` to UUID (PRD Task #6 related):
+   - Modify `UserModel` in `forest_app.persistence.models.py` to use `id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)`.
+   - Update all related foreign keys in other models (e.g., `HTATreeModel.user_id`, `HTANodeModel.user_id`, `MemorySnapshotModel.user_id`) to UUID type.
+2. **`HTATreeModel` Enhancements (PRD Sec 3.2):
+   - Ensure `manifest` field is `Mapped[dict] = mapped_column(JSONB, nullable=True)`.
+   - Add GIN index: `Index("ix_hta_trees_manifest_gin", HTATreeModel.manifest, postgresql_using="gin")` in `__table_args__` or dedicated migration.
+3. **`HTANodeModel` Indexing (PRD Sec 3.2):
+   - Add/Verify B-Tree indexes: `Index("ix_hta_nodes_tree_id_status", HTANodeModel.tree_id, HTANodeModel.status)`, `Index("ix_hta_nodes_tree_id_is_major_phase_status", HTANodeModel.tree_id, HTANodeModel.is_major_phase, HTANodeModel.status)`, `Index("ix_hta_nodes_parent_id_status", HTANodeModel.parent_id, HTANodeModel.status)`. Ensure `roadmap_step_id` and `is_major_phase` are also indexed as needed (your `is_major_phase` is already indexed - good).
+4. **`MemorySnapshotModel` Enhancements (PRD Sec 4):
+   - Ensure `snapshot_data` is JSONB. Add `Index("ix_memory_snapshots_user_id_created_at", MemorySnapshotModel.user_id, MemorySnapshotModel.created_at.desc())`.
+5. **`TaskFootprintModel`, `ReflectionLogModel`:** Review fields in `forest_app.persistence.models.py` against PRD v4.0 intent for basic audit/memory (e.g., timestamps, relevant IDs, type of event/reflection). 6. **Alembic Migrations:** Generate/update Alembic revision(s) in `alembic/versions/` to capture ALL schema changes (UUIDs, JSONB types, new indexes). Test `upgrade` and `downgrade` paths thoroughly. Consolidate or manage sequence with existing `f5b76ed1b9bd_...` migration.
+
+# Test Strategy:
+Verify Alembic migrations apply/rollback. Unit test model creation/relationships. Manually inspect DB schema for indexes. Query performance tests for indexed fields will come with feature implementation.

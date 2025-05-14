@@ -1,0 +1,55 @@
+# Task ID: 35
+# Title: Implement Context Trimming for LLM Prompts
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Implement essential context trimming for LLM prompts as specified in PRD v3.15 section 3.5. Limit recent_tasks_log to a fixed number of items and apply simple heuristics for journey_summary to optimize token usage and improve performance.
+# Details:
+Implement context trimming for LLM prompts to optimize token usage and performance as specified in PRD v3.15 section 3.5:
+
+1. Create a ContextTrimmer utility class in forest_app/utils/context_trimmer.py:
+```python
+class ContextTrimmer:
+    def __init__(self, config: Dict[str, Any]):
+        self.max_recent_tasks = config.get('max_recent_tasks', 5)
+        self.max_journey_summary_items = config.get('max_journey_summary_items', 10)
+        self.max_token_target = config.get('max_token_target', 1000)
+    
+    def trim_recent_tasks_log(self, recent_tasks_log: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        # Implementation that caps the recent_tasks_log to the configured maximum
+        # Should prioritize most recent tasks
+        # Return trimmed list
+    
+    def trim_journey_summary(self, journey_summary: Dict[str, Any]) -> Dict[str, Any]:
+        # Apply heuristics to trim journey_summary
+        # Focus on most recent and most relevant information
+        # Return trimmed journey_summary
+```
+
+2. Implement recent_tasks_log trimming:
+   - Cap the list to a configurable number (default: 5 most recent tasks)
+   - Ensure the most recent and significant completions are preserved
+   - Implement simple priority rules for important vs. routine tasks
+   - Add timestamp-based filtering for recency
+
+3. Implement journey_summary optimization:
+   - Apply heuristics to identify and retain the most relevant information
+   - Trim verbose sections while maintaining key insights
+   - Remove duplicative or redundant information
+   - Prioritize information related to current phase and context
+
+4. Integrate with LLM service context preparation:
+   - Add ContextTrimmer to LLM prompt generation pipeline
+   - Apply trimming before final prompt assembly
+   - Add telemetry to track token count savings
+   - Include before/after token counts in debug logs
+
+5. Configure trimming rules in settings.py:
+   - Make trimming thresholds configurable
+   - Allow different trimming rules for different prompt types
+   - Document the trimming settings and their impacts
+
+This implementation will optimize token usage and improve performance while preserving the most relevant context for LLM interactions, directly addressing the requirements in PRD v3.15 section 3.5.
+
+# Test Strategy:
+

@@ -16,7 +16,13 @@ WORKDIR /app
 # - ca-certificates: needed for SSL connections by the proxy
 # - graphviz: needed for some Python packages
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl ca-certificates graphviz && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    graphviz \
+    build-essential \
+    gcc \
+    python3-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Download and install the Cloud SQL Auth Proxy

@@ -1,0 +1,41 @@
+# Task ID: 33
+# Title: Implement Basic Phase Completion UI Notification
+# Status: pending
+# Dependencies: 16, 17
+# Priority: medium
+# Description: Design and implement a simple UI notification component for phase completion as specified in PRD v3.15. Focus on basic notification without complex LLM-driven suggestions. The notification should display the completed phase name and the next recommended phase (if any).
+# Details:
+Implement a minimal but effective phase completion notification UI as specified in PRD v3.15:
+
+1. Create React components for phase completion notification:
+   - Design `PhaseCompletionToast` component for minor completions
+   - Design `PhaseCompletionBanner` component for major phase completions
+   - Include appropriate styling consistent with the Forest UI design
+
+2. Implement the notification content:
+   - Display congratulatory message with completed phase name
+   - Show the next recommended phase (if available)
+   - Include simple action buttons ("Continue" or "Later")
+   - Add subtle animations for user engagement
+
+3. Connect UI components to API endpoints:
+   - Subscribe to phase completion events
+   - Request next phase data from `/trees/{tree_id}/phases/next` endpoint
+   - Handle error cases appropriately
+   - Implement proper loading states
+
+4. Add notification management:
+   - Create notification queue for multiple completions
+   - Set appropriate auto-dismiss timing
+   - Implement user dismissal handling
+   - Persist notification state for session continuity
+
+5. Test on various devices and screen sizes:
+   - Ensure responsive design works on mobile and desktop
+   - Verify accessibility requirements are met
+   - Test notification behavior with keyboard navigation
+
+This implementation focuses on the core notification functionality without the more advanced LLM-driven suggestions, aligning with the v3.15 PRD's emphasis on implementing the basic version first.
+
+# Test Strategy:
+

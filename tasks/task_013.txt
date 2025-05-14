@@ -1,0 +1,20 @@
+# Task ID: 13
+# Title: P3.1: Implement HTA Branch Re-scoping (Backend & Basic UI)
+# Status: pending
+# Dependencies: 3, 4, 7, 10, 12
+# Priority: high
+# Description: Implement two-phase API (preview/confirm) for re-scoping, collaborative LLM prompting, transactional/audited updates, idempotency, and supportive Streamlit UI, as per PRD v4.0.
+# Details:
+1. **Re-scoping Service (in `HTAService` or new service) (PRD F4.3, 8-P3):
+   - `generate_rescope_preview(...)`: LLM generates revised `RoadmapStep`s. Create diff. Store preview (e.g., Redis/DB cache with TTL). Return diff summary & token.
+   - `apply_rescope_changes(...)`: Apply to `RoadmapManifest` & `HTANodeModel`s transactionally, with audit logging, if confirmed.
+   - LLM Prompt: Collaborative framing, validate user's input, guided by initial principles (Task #P0.1) and then Voice & Tone Guide (Task #P3.2) (PRD Sec 8-P3).
+   - Performance: LLM part <3s; diff/commit quick.
+2. **API Endpoints & DTOs (`routers/hta.py` or similar) (PRD F4.3):
+   - `POST /nodes/{node_id}/rescope/preview`, `POST /nodes/{node_id}/rescope/confirm`.
+   - DTOs: `RescapeRequest`, `RescapePreviewResponse` (with `collaborative_framing`), `RescapeConfirmRequest`, `RescapeConfirmResponse` (with `acknowledgment`). Design for idempotency.
+3. **Streamlit UI (`streamlit_app.py`) (PRD F4.3, 8-P3):
+   - `RescopePreview` component with supportive diff visualization, user control, feedback options.
+
+# Test Strategy:
+Test re-scoping preview/confirm flows, transactional integrity, audit logging, idempotency. Verify collaborative messaging. Test performance. User test UI for supportiveness and control.
