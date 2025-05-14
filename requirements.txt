@@ -92,3 +92,4 @@ PyYAML>=6.0             # For configuration and serialization
 ulid-py>=1.1.0          # For time-sorted unique IDs
 apscheduler>=3.10.1     # For background task scheduling
 tenacity>=8.2.2         # For retry logic in circuit breaker
+numpy

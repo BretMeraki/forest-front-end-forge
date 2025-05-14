@@ -35,7 +35,7 @@ def setup_discovery_journey(app: FastAPI) -> None:
     async def init_discovery_journey(
         hta_service: EnhancedHTAService = Depends(Provide[Container.enhanced_hta_service]),
         llm_client: LLMClient = Depends(Provide[Container.llm_client]),
-        event_bus: EventBus = Depends(Provide[Container.architecture.event_bus]),
+        event_bus: EventBus = Depends(Provide[Container.event_bus]),
     ):
         """Initialize the Discovery Journey service and register it with the app."""
         try:

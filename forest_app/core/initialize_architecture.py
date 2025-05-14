@@ -17,7 +17,8 @@ from dependency_injector import containers, providers
 
 # Import enhanced architectural components
 from forest_app.core.task_queue import TaskQueue
-from forest_app.core.circuit_breaker import CircuitBreakerConfig, CacheBackend
+from forest_app.core.circuit_breaker import CircuitBreakerConfig
+from forest_app.core.cache_service import CacheBackend
 from forest_app.core.event_bus import EventBus, EventType
 from forest_app.core.cache_service import CacheService, CacheConfig
 from forest_app.core.services.enhanced_hta_service import EnhancedHTAService

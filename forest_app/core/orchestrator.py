@@ -68,6 +68,7 @@ except ImportError:
 
 # Import shared types
 from forest_app.modules.types import SemanticMemoryProtocol
+from forest_app.core.processors.reflection_processor import prune_context as _prune_context
 
 logger = logging.getLogger(__name__)
 
@@ -414,3 +415,7 @@ class ForestOrchestrator:
         except Exception as e:
             logger.exception("Error describing magnitude for value %s: %s", value, e)
             return "Unknown"
+
+def prune_context(snap_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Proxy to the main prune_context implementation in reflection_processor."""
+    return _prune_context(snap_dict)

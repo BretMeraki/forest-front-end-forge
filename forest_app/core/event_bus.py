@@ -47,6 +47,7 @@ class EventType(str, Enum):
     DATABASE_OPERATION = "system.database_op"
     SYSTEM_ERROR = "system.error"
     METRICS_RECORDED = "system.metrics"
+    SYSTEM_METRICS = "system.metrics"
 
 class EventData(BaseModel):
     """Base model for event data payload."""

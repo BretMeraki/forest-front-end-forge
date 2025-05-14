@@ -20,9 +20,6 @@ ForestFInal-main-20250511T022854Z-001.zip
 venv-powershell/
 venv*
 
-# Environment variables
-.env
-
 # Editor directories and files
 .idea
 .vscode

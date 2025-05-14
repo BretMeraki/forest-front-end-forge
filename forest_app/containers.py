@@ -298,8 +298,7 @@ class Container(containers.DeclarativeContainer):
     # LLM Client (provide dummy if import failed)
     # >>> CORRECTED TO SINGLETON <<<
     llm_client = providers.Singleton(
-        LLMClient,
-        config=config
+        LLMClient
     ) if llm_import_ok else providers.Singleton(DummyService)
 
     # --- Individual Engine/Manager Providers (used by processors/services) ---
@@ -450,6 +449,24 @@ class Container(containers.DeclarativeContainer):
         semantic_memory_manager=semantic_memory_manager
     ) if modules_core_import_ok else providers.Singleton(DummyService)
 
+    # Enhanced HTA Service (NEW PROVIDER)
+    from forest_app.core.services.enhanced_hta_service import EnhancedHTAService
+    from forest_app.core.session_manager import session_manager
+    enhanced_hta_service = providers.Singleton(
+        EnhancedHTAService,
+        llm_client=llm_client,
+        semantic_memory_manager=semantic_memory_manager,
+        session_manager=session_manager
+    ) if modules_core_import_ok else providers.Singleton(DummyService)
+
+    # Event Bus (NEW PROVIDER)
+    from forest_app.core.event_bus import EventBus
+    event_bus = providers.Singleton(EventBus.get_instance)
+
+    # Cache Service (NEW PROVIDER)
+    from forest_app.core.cache_service import CacheService
+    cache_service = providers.Singleton(CacheService.get_instance)
+
     # Reflection Processor
     reflection_processor = providers.Singleton(
         ReflectionProcessor,
@@ -500,19 +517,13 @@ def init_container():
     global container
     if container is None:
         container = Container()
+        try:
+            container.wire(modules=Container.wiring_config.modules)
+            logger.info("DI Container wiring applied successfully.")
+        except Exception as wire_err:
+            logger.critical(f"CRITICAL: Failed to apply DI container wiring: {wire_err}", exc_info=True)
     return container
 
 # Initialize container if this module is run directly
 if __name__ == "__main__":
     init_container()
-
-# --- Apply Wiring ---
-# Wire the container to the modules specified in wiring_config (runs once on import)
-try:
-    # Accessing wiring_config attribute defined within the class
-    container.wire(modules=Container.wiring_config.modules) # Use Container.wiring_config
-    logger.info("DI Container wiring applied successfully.")
-except Exception as wire_err:
-    logger.critical(f"CRITICAL: Failed to apply DI container wiring: {wire_err}", exc_info=True)
-    # Depending on the application structure, you might want to exit or raise here
-    # sys.exit("Dependency Injection wiring failed.")
