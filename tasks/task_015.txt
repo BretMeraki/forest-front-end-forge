@@ -1,0 +1,23 @@
+# Task ID: 15
+# Title: P3.3: Implement End-to-End (E2E) Testing Framework (API-focused)
+# Status: pending
+# Dependencies: 13
+# Priority: high
+# Description: Establish an E2E testing framework using `pytest` and `httpx` (or similar) for API-level tests covering core user journeys and data consistency, as per PRD v4.0.
+# Details:
+1. **Framework Setup (PRD Sec 8-P3):
+   - Configure `pytest` with `httpx` for making API calls to a test instance of the application.
+   - Setup test data generation/management for E2E scenarios (e.g., pre-defined user, initial goal states).
+2. **Core Journey API Tests:**
+   - Full onboarding flow (set goal/context -> get manifest/HTA).
+   - Sequence of task completions leading to branch expansion.
+   - Sequence of task completions leading to phase completion.
+   - Re-scoping (preview & confirm).
+3. **Key Validations in E2E Tests:**
+   - Data consistency in `RoadmapManifest` (persisted in `HTATreeModel.manifest`) and `HTANodeModel` statuses across operations.
+   - Correct API response status codes and basic payload structure.
+   - Transactional integrity checks where feasible at E2E level (e.g., a failed expansion API call doesn't leave partial data visible via subsequent GET calls).
+   - Basic auth/authz for endpoints (once Task #P4.3 is substantially complete, these tests can be enhanced).
+
+# Test Strategy:
+E2E API tests run in CI. Cover happy paths for core flows. Ensure tests are reliable and clear on failure. Tests should clean up their data or run against a fresh test DB instance.

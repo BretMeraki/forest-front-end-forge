@@ -1,0 +1,63 @@
+# Task ID: 28
+# Title: Prepare Koyeb Deployment Configuration
+# Status: pending
+# Dependencies: 25, 26
+# Priority: high
+# Description: Create Dockerfile, configuration files, and deployment documentation for Koyeb deployment
+# Details:
+Prepare the application for deployment to Koyeb:
+
+1. Create a production-ready Dockerfile:
+```dockerfile
+FROM python:3.11.8-slim
+
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PORT=8080
+
+# Run as non-root user for security
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser
+
+# Start the application with Uvicorn
+CMD exec uvicorn forest_app.main:app --host 0.0.0.0 --port $PORT
+```
+
+2. Configure environment variables for production:
+   - Create a comprehensive list of required environment variables
+   - Document secure storage of sensitive variables in Koyeb
+   - Set up environment variable validation in application
+   - Provide default values where appropriate
+
+3. Set up Koyeb service configuration:
+   - Define resource requirements (CPU, memory)
+   - Configure scaling parameters
+   - Set up health checks and restart policies
+   - Configure network settings and domains
+
+4. Implement database migration strategy:
+   - Create a pre-deployment migration script
+   - Test migrations on staging environment
+   - Document rollback procedures
+   - Ensure zero-downtime updates
+
+5. Create comprehensive deployment documentation:
+   - Step-by-step deployment guide
+   - Infrastructure requirements
+   - Configuration options
+   - Troubleshooting common issues
+   - Monitoring and maintenance procedures
+
+This preparation will ensure a smooth deployment to Koyeb with proper configuration and documentation.
+
+# Test Strategy:
+

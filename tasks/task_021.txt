@@ -1,0 +1,15 @@
+# Task ID: 21
+# Title: P4.5: Finalize Koyeb Deployment Configuration
+# Status: pending
+# Dependencies: 1, 2, 19, 20
+# Priority: critical
+# Description: Finalize Dockerfile, Koyeb service configurations (`koyeb.yaml` or UI), environment variable setup for production, and deployment/rollback documentation, as per PRD v4.0.
+# Details:
+1. **Production Dockerfile (PRD Sec 8-P4):
+   - Base on `python:3.11.8-slim` (reconcile with Task #P0.1 Python version). `WORKDIR /app`. `COPY requirements.txt`, `pip install`. `COPY . .`. ENV `PYTHONPATH`, `PORT`. Non-root user. CMD `uvicorn forest_app.main:app --host 0.0.0.0 --port $PORT` (or use `entrypoint.sh` if it handles this).
+2. **Koyeb Secure Environment Variables:** Finalize list of all production env vars and document secure configuration in Koyeb (DB, LLM keys, `SECRET_KEY`, `SENTRY_DSN`, `FRONTEND_URL` etc.). 3. **Koyeb Service Configuration (PRD Sec 8-P4):
+   - Define instance size, scaling (min/max 1 for MVP), health checks (e.g., `/health` endpoint in `main.py`), restart policies, custom domains via `koyeb.yaml` or UI.
+4. **Database Migration Strategy for Deployment:** Ensure Alembic migrations (Task #P0.2) are applied via `deploy.py` script or Koyeb build step. Document rollback. 5. **Deployment Documentation:** Finalize deployment and rollback procedures. Your `deploy.py` and `pre_deploy_check.py` are good starts.
+
+# Test Strategy:
+Build final Docker image. Test deployment to a Koyeb staging/test service. Verify all production env vars are loaded. Test health checks. Execute DB migration via deployment. Test deployment rollback scenario.

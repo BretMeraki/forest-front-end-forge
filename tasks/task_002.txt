@@ -1,0 +1,20 @@
+# Task ID: 2
+# Title: P0.3: Setup Foundational Monitoring, Logging & Alerting
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Configure tools and basic infrastructure for structured logging (LLM calls, API latencies, DB ops) and alerting on P75 latency targets & 0.1% error budget, as per PRD v4.0.
+# Details:
+1. **Structured Logging (PRD Sec 3, 8-P0):
+   - Enhance `LoggingMiddleware` in `forest_app.main.py` to ensure `trace_id` from `RequestContext` (Task #P0.1) is included in all request-related logs.
+   - Configure `python-json-logger` (from `requirements.txt`) for structured JSON log output for easier parsing by Sentry or other tools.
+2. **Metrics Collection Foundation (PRD Sec 2, 8-P0):
+   - Ensure `PerformanceMiddleware` (Task #P0.1) or enhanced `LoggingMiddleware` correctly logs API latencies.
+   - `BaseLLMService` (Task #P1.1) will be responsible for logging LLM call details (count, timing, tokens, errors).
+   - Plan for logging key DB operation timings (e.g., in `forest_app.persistence.repository.py` methods or via SQLAlchemy event listeners - P1 implementation).
+3. **Alerting Setup (PRD Sec 2, 8-P0):
+   - Configure Sentry (using `SENTRY_DSN` from `settings.py`) or chosen platform for alerts if P75 latency targets or 0.1% error budget are breached. Also for critical error rate spikes.
+   - Ensure this is operational by end of P1.
+
+# Test Strategy:
+Verify logs are structured, include `trace_id`, and are sent to Sentry (if configured). Confirm API latencies are logged. Test basic alert mechanism by simulating a condition that breaches a defined threshold.

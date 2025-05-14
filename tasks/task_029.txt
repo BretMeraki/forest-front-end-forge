@@ -1,0 +1,48 @@
+# Task ID: 29
+# Title: Deploy MVP to Koyeb and Conduct Self-Evaluation
+# Status: pending
+# Dependencies: 28
+# Priority: high
+# Description: Deploy the application to Koyeb production environment and conduct thorough self-testing to gather insights and validate the MVP
+# Details:
+Execute the final deployment and conduct self-evaluation of the MVP:
+
+1. Deploy to Koyeb production environment:
+   - Follow the deployment guide created in Task #28
+   - Configure all required environment variables
+   - Set up database connections and perform migrations
+   - Configure domains and SSL certificates
+   - Verify successful deployment with health checks
+
+2. Conduct comprehensive self-testing:
+   - Create multiple test trees with different goals and complexities
+   - Complete tasks and trigger phase transitions
+   - Test the full user journey multiple times
+   - Verify manifest-HTA consistency throughout
+   - Evaluate the "Fun & Joy" aspects of the experience
+   - Test performance under various conditions
+
+3. Monitor production metrics:
+   - Track LLM API usage, costs, and performance
+   - Monitor response times and system load
+   - Analyze database performance and growth
+   - Identify any performance bottlenecks or issues
+   - Track user engagement metrics
+
+4. Document findings and insights:
+   - Create a detailed evaluation report
+   - Identify strengths and areas for improvement
+   - Document any unexpected behavior or issues
+   - Capture user feedback and observations
+   - Prioritize post-MVP enhancements
+
+5. Create a roadmap for future development:
+   - Identify high-value features for next iterations
+   - Document technical debt to be addressed
+   - Propose optimizations based on performance data
+   - Outline scaling strategy for increased adoption
+
+This final task completes the MVP development cycle and sets the stage for future evolution of the Forest OS system.
+
+# Test Strategy:
+

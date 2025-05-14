@@ -1,0 +1,11 @@
+# Task ID: 34
+# Title: Implement Basic LLM Call Monitoring
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Implement basic logging and monitoring for LLM API calls as specified in PRD v3.15. This should include tracking call counts, errors, and P75 latency metrics for initial manifest generation (target < 8s) and expansions (target < 3s). Focus on simple logging rather than complex Prometheus dashboards.
+# Details:
+
+
+# Test Strategy:
+

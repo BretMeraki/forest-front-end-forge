@@ -1,0 +1,46 @@
+# Task ID: 25
+# Title: Implement Production Metrics and Monitoring
+# Status: pending
+# Dependencies: 23
+# Priority: high
+# Description: Set up counters, gauges, and dashboarding for monitoring key system metrics in production
+# Details:
+As specified in the PRD Feedback v3.2 Cycle - Action/Decision section, implement production metrics:
+
+1. Set up Prometheus counters/gauges via starlette-exporter or similar:
+   - Onboarding success/failure rates
+   - HTA expansion events (triggered, successful, failed)
+   - LLM call counts by type (initial generation, expansion, etc.)
+   - API endpoint error rates by endpoint/status code
+   - Task completion event counts
+   - Latency metrics for critical operations
+
+2. Implement instrumentation in key services:
+   - Add metrics collection in RoadmapParser
+   - Instrument HTAService operations
+   - Track LLMClient performance
+   - Measure database operation durations
+   - Record API endpoint response times
+
+3. Create lightweight dashboarding with internal tools/DB queries:
+   - Track HTA trees created over time
+   - Monitor tasks generated vs. completed per tree/user
+   - Graph active users and session metrics
+   - Visualize error rates and performance trends
+
+4. Set up structured logging:
+   - Configure consistent log format with trace_id correlation
+   - Log critical errors and application lifecycle events
+   - Create log aggregation solution
+   - Implement log level controls for different environments
+
+5. Add alerting for critical conditions:
+   - Configure alerts for elevated error rates
+   - Set thresholds for performance degradation
+   - Monitor LLM service availability
+   - Alert on database issues
+
+These monitoring capabilities are essential for maintaining system health in production and identifying potential issues before they impact users.
+
+# Test Strategy:
+

@@ -1,0 +1,61 @@
+# Task ID: 27
+# Title: Implement Optional MCP Server Wrapper (Stretch Goal)
+# Status: pending
+# Dependencies: 16, 17, 26
+# Priority: medium
+# Description: Create a Model Context Protocol (MCP) server interface that wraps core Forest OS functionality for integration with other AI tools
+# Details:
+As specified in the PRD section 7.1 (Optional MCP Server Interface), implement a basic MCP server wrapper:
+
+1. Create a separate entry point in forest_app/mcp_server.py:
+```python
+def create_mcp_app():
+    app = MCPServer(name="forest-os-mcp")
+    
+    # Register handlers
+    app.register_function("create_roadmap", create_roadmap_handler)
+    app.register_function("get_tree", get_tree_handler)
+    app.register_function("complete_task", complete_task_handler)
+    # Register other handlers
+    
+    return app
+```
+
+2. Implement MCP handlers that wrap core service methods:
+```python
+async def create_roadmap_handler(request: Dict) -> Dict:
+    # Extract parameters from MCP request
+    # Call RoadmapParser and HTAService methods
+    # Return lean JSON response
+    
+async def get_tree_handler(request: Dict) -> Dict:
+    # Extract tree_id from request
+    # Call repository to get tree and nodes
+    # Format as lean JSON response
+    
+async def complete_task_handler(request: Dict) -> Dict:
+    # Extract node_id and parameters
+    # Call CompletionProcessor
+    # Return response with updated state
+```
+
+3. Create conversion utilities:
+   - Functions to convert between MCP protocol and internal models
+   - Streamlined JSON representations of complex objects
+   - Error mapping to MCP format
+
+4. Add documentation for MCP integration:
+   - API reference for available methods
+   - Example requests and responses
+   - Integration guide for MCP clients
+   - Usage scenarios and limitations
+
+5. Implement authentication for MCP server:
+   - Configure API key validation
+   - Set up rate limiting specific to MCP interface
+   - Add logging and monitoring for MCP usage
+
+This optional MCP server interface enables integration with other AI tools and environments while maintaining a single logic codebase.
+
+# Test Strategy:
+

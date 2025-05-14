@@ -1,0 +1,25 @@
+# Task ID: 4
+# Title: P1.1: Implement LLM Service (Base & Gemini)
+# Status: pending
+# Dependencies: 1, 2, 3
+# Priority: critical
+# Description: Refine/Complete `BaseLLMService` and `GoogleGeminiService` (`integrations/llm_service.py`) to be fully async, with robust retry (exponential backoff), timeout, fallback, token controls, audit logging, and DI integration. Implement `PromptAugmentationService` and `ContextTrimmer`.
+# Details:
+1. **BaseLLMService (`integrations/llm_service.py`) (PRD Sec 3.3):
+   - Ensure `generate_content_async` (or similar methods like `generate_text_async`, `generate_json_async`) are robust and truly non-blocking.
+   - Implement/Verify retry logic using `tenacity` (from `requirements.txt`) respecting API idempotency (Task #P0.1 strategy).
+   - Implement `asyncio.wait_for` for timeouts and clear fallbacks.
+   - Implement `_record_metrics` method for audit logging (count, timing, tokens, errors - to system from Task #P0.3).
+   - Implement lightweight caching for identical, small, repeatable calls (PRD Sec 3.4).
+   - Defer/Disable `PredictivePrefetchService` for MVP (PRD Sec 9).
+2. **GoogleGeminiService (subclass of `BaseLLMService`) (PRD Sec 3.3):
+   - Use Google AI client's `generate_content_async`.
+   - Implement `max_output_tokens` enforcement.
+   - Use `settings.GEMINI_MODEL_NAME` and `settings.GEMINI_ADVANCED_MODEL_NAME` from `config/settings.py`.
+3. **PromptAugmentationService (PRD Sec 5):
+   - Create new service (e.g., in `core/services/`) for pre-pending/appending standard instructions (supportive tone, output structure requests) to prompts. Load templates efficiently.
+4. **ContextTrimmer (`utils/context_trimmer.py` or similar) (PRD Sec 3.5):
+   - Implement `ContextTrimmer` to cap `recent_tasks_log` and apply heuristics to `journey_summary` to optimize token usage. Integrate into LLM calls where full context is passed.
+
+# Test Strategy:
+Test LLM service layer overhead (<1ms excluding API call). Verify async behavior, retry logic, timeouts, fallbacks. Confirm token controls and metrics logging. Test `ContextTrimmer` effectiveness.

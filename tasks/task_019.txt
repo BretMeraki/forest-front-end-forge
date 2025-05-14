@@ -1,0 +1,14 @@
+# Task ID: 19
+# Title: P4.3: Implement Basic API Security
+# Status: pending
+# Dependencies: 17
+# Priority: high
+# Description: Implement JWT authentication (`core/security.py`), basic rate limiting, robust request validation, CORS, and security headers for API endpoints, as per PRD v4.0.
+# Details:
+1. **Authentication (PRD Sec 8-P4):
+   - Finalize JWT-based authentication using `passlib`, `python-jose` as established in `core/security.py`. Ensure your `/token` endpoint in `routers/auth.py` is robust.
+   - Secure token management. Integrate `OAuth2PasswordBearer` dependency (`get_current_active_user` from `dependencies.py`) into all protected API endpoints.
+2. **Rate Limiting:** Implement basic per-user or per-IP rate limiting for key mutating endpoints (e.g., using `slowapi`). 3. **Request Validation:** Ensure all API endpoints use Pydantic models for comprehensive request body/param validation, referencing `Data Validation Rules Catalog` (Task #P0.1). 4. **CORS:** Configure `CORSMiddleware` in `main.py` for Streamlit frontend, limiting origins for production. 5. **Security Headers:** Add basic set via middleware (e.g., `Content-Security-Policy` - lenient for MVP, `X-Content-Type-Options`, `X-Frame-Options`).
+
+# Test Strategy:
+Test authentication flows (token gen, validation, protected endpoints). Test rate limits. Send invalid/malformed requests to verify validation and error responses. Check CORS and security headers.

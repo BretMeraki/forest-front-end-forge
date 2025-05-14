@@ -1,0 +1,40 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+
+# Dependency directories
+node_modules/
+venv/
+
+# Specific project exclusions
+__pycache__/
+alembic/
+docs/
+public/
+ForestFInal-main-20250511T022854Z-001.zip
+.DS_Store
+venv-powershell/
+venv*
+
+# Environment variables
+.env
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS specific
+.DS_Store
+
+# Task files
+
+mcp_config.json

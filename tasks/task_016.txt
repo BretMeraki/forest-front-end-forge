@@ -1,0 +1,18 @@
+# Task ID: 16
+# Title: P3.4: Create Automated Tests for Phase Completion Logic
+# Status: pending
+# Dependencies: 8, 11
+# Priority: high
+# Description: Implement automated unit/integration tests simulating task completions to verify major phase detection and next-phase suggestion logic (from Task #P2.2), as per PRD v4.0.
+# Details:
+1. **Test Harness (`tests/core/test_phase_completion.py` or similar) (PRD Sec 8-P3):
+   - Create test fixtures for `RoadmapManifest`s with various phase structures and dependencies.
+   - Mock `HTAService` and `CompletionProcessor` interactions as needed for focused testing of phase logic.
+2. **Simulate Task Completions:** Programmatically update statuses in test `RoadmapManifest` instances and `HTANodeModel` mocks. 3. **Verify Phase Logic (from Task #P2.2):
+   - Correct detection of major phase completion by the `PhaseManager` (or equivalent logic).
+   - Accurate next major phase suggestion (>90% accuracy PRD target).
+   - Test edge cases: no next phase, multiple possible next phases (how to prioritize?), etc.
+4. **Test Notification Triggers:** Ensure conditions for triggering phase completion notifications (even if just internal events at this stage) are met correctly.
+
+# Test Strategy:
+Cover diverse manifest structures. Test different completion sequences. Validate accuracy of next phase suggestions against PRD metric. Integrate into CI.

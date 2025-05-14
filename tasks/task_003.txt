@@ -1,0 +1,25 @@
+# Task ID: 3
+# Title: P0.4: Implement Core Pydantic Data Models (Manifest/Step)
+# Status: pending
+# Dependencies: None
+# Priority: critical
+# Description: Develop performance-optimized Pydantic models for `RoadmapStep` and `RoadmapManifest` with validation, internal indexing for efficient operations, and helper methods, as per PRD v4.0.
+# Details:
+1. **Refine `RoadmapStep` (`core/roadmap_models.py`) (PRD Sec 3.2):
+   - Set `model_config = ConfigDict(frozen=True, extra='forbid', validate_assignment=False, populate_by_name=True, validate_default=False, arbitrary_types_allowed=True)`.
+   - Change `dependencies: List[UUID]` to `dependencies: FrozenSet[UUID] = Field(default_factory=frozenset)`. Add `@validator('dependencies', pre=True)` to convert lists.
+   - Add `created_at: datetime = Field(default_factory=...)`, `updated_at: datetime = Field(default_factory=...)`.
+   - Ensure `hta_metadata: Dict[str, Any] = Field(default_factory=dict)` for `is_major_phase` etc.
+2. **Refine `RoadmapManifest` (`core/roadmap_models.py`) (PRD Sec 3.2):
+   - Set `model_config = ConfigDict(extra='forbid', ...) `.
+   - Implement internal indexes in `__init__` (via `_build_indexes()`): `_step_index`, `_dependency_graph`, `_reverse_dependency_graph`, `_topological_sort_cache` (these should be private instance variables, not Pydantic fields unless carefully managed with `exclude=True` for serialization).
+   - Add `created_at: datetime`, `updated_at: datetime`. Manage `updated_at` on logical mutations (often means creating new manifest instances if steps are immutable).
+3. **Implement Helper Methods on `RoadmapManifest` (PRD Sec 3.2.1):
+   - `get_step_by_id`, `update_step_status` (returns new manifest), `add_step` (returns new manifest), `get_pending_actionable_steps`, `get_major_phases`.
+4. **Implement Cached Dependency Algorithms on `RoadmapManifest`:
+   - `check_circular_dependencies()` (details in Task #P1.2). Consider caching strategy if manifest is immutable vs. mutable.
+   - `get_topological_sort()` (builds/uses `_topological_sort_cache`). Invalidate cache or create new manifest on changes.
+5. **Validation:** Ensure models incorporate rules from `Data Validation Rules Catalog` (Task #P0.1).
+
+# Test Strategy:
+Unit test model creation, validation (from Validation Catalog), internal index building, helper methods. Benchmark operations with various manifest sizes.

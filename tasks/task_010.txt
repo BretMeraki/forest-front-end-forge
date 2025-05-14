@@ -1,0 +1,17 @@
+# Task ID: 10
+# Title: P2.1: Implement HTA Dynamic Expansion (Backend & Basic UI)
+# Status: pending
+# Dependencies: 3, 4, 7, 8, 9
+# Priority: high
+# Description: Implement backend logic (LLM generates new `RoadmapSteps`, HTA/Manifest updated transactionally/audited/idempotent) and basic UI for dynamic branch expansion with collaborative framing, as per PRD v4.0.
+# Details:
+1. **BranchExpansionService (New service or extend `HTAService`) (PRD F4.2, 8-P2):
+   - `expand_branch(node_id, additional_context, request_context)`: Retrieve parent `HTANodeModel`. Call LLM (Task #P1.1) with collaborative prompt (initial version) to generate new `RoadmapStep`s. Update `RoadmapManifest` (Task #P0.4 `add_step`) and create new `HTANodeModel`s transactionally, with audit logging. Ensure P75 < 3s target.
+   - Expansion Triggers: `CompletionProcessor` (Task #P1.5) updates `HTANodeModel.branch_triggers`. Logic to set `expand_now` or allow user-initiated expansion via API.
+2. **API Endpoint (`routers/hta.py` or similar) (PRD F4.2):
+   - `POST /nodes/{node_id}/expand`: Calls expansion service. Design for idempotency.
+3. **Streamlit UI (`streamlit_app.py`) (PRD Sec 8-P2):
+   - Basic UI components to trigger expansion and display new sub-tasks with collaborative intro message. Smooth transitions.
+
+# Test Strategy:
+Test expansion service performance (<3s), transactional integrity, audit logging, idempotency. Verify LLM prompt's collaborative framing. Test UI for clarity and collaborative feel. Validate expansion trigger logic.

@@ -1,0 +1,11 @@
+# Task ID: 23
+# Title: Stretch: Implement Next Phase Kick-off LLM Call
+# Status: deferred
+# Dependencies: None
+# Priority: low
+# Description: Implement opt-in contextual LLM call to refine the start of the next phase based on recent progress (PRD F4.4.4, Sec 9 - Out of Scope for Lean MVP).
+# Details:
+1. This is a P(n+1) feature as per PRD v4.0 Section 9. 2. If implemented, involves: new LLM prompt, `HTAService` method, opt-in API, UI components, transactional updates.
+
+# Test Strategy:
+Test LLM prompt effectiveness, user acceptance, impact on plan coherence, and UX of opt-in flow.

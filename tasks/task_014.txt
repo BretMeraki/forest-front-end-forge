@@ -1,0 +1,18 @@
+# Task ID: 14
+# Title: P3.2: Conduct UX, Performance & Brand Validation Sprint; Finalize Voice & Tone Guide
+# Status: pending
+# Dependencies: 8, 9, 10, 11, 12, 13
+# Priority: critical
+# Description: Run formal validation sprint (3-5 users) for usability, perceived performance, and brand resonance. Refine and finalize 1-page 'Voice & Tone Guide', as per PRD v4.0.
+# Details:
+1. **Execute Validation Sprint (PRD Sec 8-P3):
+   - Test core flows: roadmap creation, completion, expansion, re-scoping, phase notifications.
+   - Measure perceived vs. actual latency. Collect qualitative feedback on supportive scaffolding, responsiveness, language.
+   - **Brand Validation**: Test "Brand Hypotheses" (Task #P2.5 output); assess metaphor resonance, voice/tone clarity and supportiveness.
+2. **Deliverables / Outputs:**
+   - Prioritized list of top usability issues & performance bottlenecks.
+   - Summary of user confidence impact.
+   - **Finalized 1-page "Voice & Tone Guide" (Deliverable)**: Based on P2.5 & P3 feedback. Include principles, approved terminology, do/don't examples, LLM prompting guidance. DoD: ≥80% positive resonance with metaphor/voice from P2.5/P3 feedback participants (PRD Sec 2).
+
+# Test Strategy:
+Record sessions. Compare perceived vs. actual latency. Standardized scoring for feedback. Use report to guide P4. Ensure Voice & Tone Guide is actionable.

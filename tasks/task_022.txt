@@ -1,0 +1,20 @@
+# Task ID: 22
+# Title: P5.1: Deploy MVP to Koyeb Production & Conduct Self-Evaluation
+# Status: pending
+# Dependencies: 21
+# Priority: critical
+# Description: Execute final deployment to Koyeb production. Conduct thorough self-testing, monitor initial metrics, document findings, and plan P(n+1), as per PRD v4.0.
+# Details:
+1. **Deploy to Koyeb Production (PRD Sec 8-P5):
+   - Follow finalized deployment procedures (Task #P4.5).
+   - Perform post-deployment smoke tests.
+2. **Comprehensive Self-Testing & Monitoring:**
+   - Execute all core user flows. Verify data integrity, performance against targets, error budget adherence using production monitoring (Task #P0.3).
+   - Evaluate supportive scaffolding and brand voice in live environment.
+   - Monitor LLM API usage/costs, Sentry for errors.
+3. **Documentation & P(n+1) Planning:**
+   - Create MVP evaluation report: strengths, weaknesses, bugs, performance observations.
+   - Prioritize P(n+1) enhancements (PRD Sec 9, stretch tasks like #23, #24), technical debt, and optimizations.
+
+# Test Strategy:
+Closely monitor logs and metrics for 24-72 hours. Perform core flows as 'first user'. Review audit logs. Execute key steps from Data Recovery Playbook (Task #P4.4) on a non-production restored copy if any concerns.

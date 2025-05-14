@@ -1,0 +1,15 @@
+# Task ID: 12
+# Title: P2.5: Conduct Brand Discovery Sprint
+# Status: pending
+# Dependencies: 6, 7, 8, 9, 10, 11
+# Priority: high
+# Description: Run qualitative user sessions to identify resonant metaphors, terminology, and tone for 'The Forest', producing a 'Brand Hypotheses' document, as per PRD v4.0.
+# Details:
+1. **Goal:** Surface metaphors, terminology, and tone that genuinely resonate (PRD Sec 8-P2.5). 2. **Activities:**
+   - Recruit and run 3-5 brief qualitative sessions with early users (informal: friends, colleagues fitting profile) to discuss their experience with the P1/P2 core loop.
+   - Use open-ended questions: “What does ‘planting a seed’ or generating a plan feel like?” “How would you describe this process?” “What kind of voice feels most supportive?”
+   - Workshop 2-3 metaphor/name candidates and voice characteristics against user language.
+3. **Output (Deliverable):** Short “Brand Hypotheses” document: top 1-2 metaphor choices, key terminology, sample voice/tone guidelines (PRD Sec 8-P2.5).
+
+# Test Strategy:
+Analyze qualitative feedback for themes. Ensure 'Brand Hypotheses' doc captures testable concepts for P3. For solo dev, even 1-2 deep conversations can be insightful if 3-5 is too much.

@@ -1,0 +1,11 @@
+# Task ID: 36
+# Title: Implement Max Token Output Controls for LLM API Calls
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Implement token cap constraints (`max_output_tokens`) for all LLM API calls as specified in PRD v3.15 section 3.3. This is essential for controlling API costs and ensuring consistent, manageable responses.
+# Details:
+
+
+# Test Strategy:
+

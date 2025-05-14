@@ -1,0 +1,19 @@
+# Task ID: 8
+# Title: P1.5: Implement Task Completion & Basic Positive Reinforcement
+# Status: pending
+# Dependencies: 1, 2, 3, 7
+# Priority: critical
+# Description: Refine `CompletionProcessor` (`core/processors/completion_processor.py`) for task/node completion, ensuring HTA/Manifest sync, `MemorySnapshot` updates, audit logging, idempotency, and basic supportive reinforcement, as per PRD v4.0.
+# Details:
+1. **CompletionProcessor (PRD F4.1, 8-P1):
+   - `process_node_completion(...)`: Update `HTANodeModel.status` and corresponding `RoadmapStep.status` in `RoadmapManifest` (via `RoadmapManifest.update_step_status` helper from Task #P0.4) transactionally.
+   - `MemorySnapshot` (`persistence/models.py`, `core/snapshot.py`): Create/update `MemorySnapshotModel`, log to `recent_tasks_log`, `confidence_building_interactions` (PRD Sec 4).
+   - Positive Reinforcement: Basic template messages for MVP, aligned with initial supportive principles (Task #P0.1). Stronger if `HTANodeModel.is_major_phase=True`.
+   - Update `HTANodeModel.branch_triggers.current_completion_count` (for Task #P2.1).
+   - Implement with full transactional consistency and audit logging.
+2. **Task Completion API Endpoint (`routers/core.py` -> `POST /complete_task` or `routers/hta.py` -> `POST /nodes/{node_id}/complete`) (PRD Sec 8-P1):
+   - Call `CompletionProcessor`. Design for idempotency (PRD Sec 3, Task #P0.1).
+   - UI should use optimistic updates (<100ms perceived completion - PRD Sec 7).
+
+# Test Strategy:
+Test completion updates HTA node & manifest step transactionally (verify rollback on failure). Verify `MemorySnapshot`. Test reinforcement messages. Test API endpoint idempotency. Verify audit logs. Check backend processing time (<1s).

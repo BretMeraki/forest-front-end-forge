@@ -1,0 +1,16 @@
+# Task ID: 5
+# Title: P1.2: Implement Circular Dependency Check & Comprehensive Error Handling
+# Status: pending
+# Dependencies: 1, 3
+# Priority: high
+# Description: Finalize circular dependency detection for `RoadmapManifest` and implement a comprehensive error handling strategy with supportive user messages, as per PRD v4.0.
+# Details:
+1. **Circular Dependency Check (`RoadmapManifest` method or `utils/dependency_utils.py`) (PRD Sec 3.2):
+   - Implement/Finalize `RoadmapManifest.check_circular_dependencies()` (from Task #P0.4) using Tarjan's or similar. Ensure it identifies specific steps in cycles and provides detailed info.
+2. **Comprehensive Error Handling Strategy (PRD Sec 2, 3, 5):
+   - Define base `ForestError(Exception)` and specific errors (`CircularDependencyError`, `LLMError`, `DatabaseError`, `DataConsistencyError`, `TransactionFailureError`, `ValidationError`) in `utils/error_handling.py` (create if not existing).
+   - Implement FastAPI exception handlers in `main.py` to return standardized JSON error responses (with `trace_id` from `RequestContext`) and appropriate HTTP status codes. Messages must align with initial supportive principles (Task #P0.1) and later the Voice & Tone Guide (Task #P2.5).
+   - Ensure robust error logging for all caught exceptions, including full context and `trace_id` (Task #P0.3).
+
+# Test Strategy:
+Test circular dependency detection with various patterns. Verify error messages are supportive. Test FastAPI error handlers return correct status codes and formatted, user-friendly responses. Test specific error types are raised and handled correctly.

@@ -1,0 +1,94 @@
+# requirements.txt
+# Updated with latest stable versions and missing dependencies
+
+# Core FastAPI framework and server
+# Using [all] includes many dependencies like pydantic, starlette, uvicorn, etc.
+fastapi[all]==0.111.0  # Example: Use the actual latest stable version found
+
+# Pydantic (explicitly listed even though it comes with fastapi[all])
+pydantic==2.6.1
+pydantic-settings==2.1.0
+
+# Database ORM
+SQLAlchemy==2.0.30   # Example: Use the actual latest stable version found
+
+# HTTP clients for LLM integration
+httpx==0.27.0          # For sync HTTP calls (if needed elsewhere)
+aiohttp==3.9.5         # For async HTTP calls in GoogleGeminiService
+
+# Retry/backoff libraries for LLM integration
+backoff==2.2.1          # For async retry logic in LLM services
+pybreaker==1.0.1        # For circuit breaker pattern implementation
+
+# Structured JSON Logging
+python-json-logger==2.0.7
+
+# Natural Language Toolkit (Required for pattern_id.py features)
+nltk==3.8.1
+
+# Linter/Formatter (Development tool)
+# ruff # Typically only needed for development, can often be removed from production requirements
+
+# uvicorn - Explicitly listed with standard extras
+uvicorn[standard]==0.30.0 # Example: Use the actual latest stable version found
+
+# PostGres DB Driver
+psycopg2-binary==2.9.9 # Example: Use the actual latest stable version found
+
+# LLM and tokenization libraries
+google-generativeai==0.6.0 # For Google Gemini API
+# Token counting for prompt management
+tiktoken==0.9.0
+
+# --- PINNED AUTH VERSIONS (DO NOT CHANGE UNLESS NECESSARY) ---
+passlib==1.7.4
+argon2-cffi==23.1.0
+python-jose[cryptography]==3.3.0
+# --- END PINNED VERSIONS ---
+
+# --- ADDED SENTRY SDK ---
+# Ensure this version supports the FastAPIIntegration import path used
+sentry-sdk[fastapi]==1.40.0
+# --- END ADDED SENTRY SDK ---
+
+# json repair
+json-repair>=0.7
+
+#database migration
+alembic>=1.13.1
+# NOTE: Removed streamlit and requests - these belong in your frontend's requirements, not the backend.
+
+#dependency injector
+dependency-injector>=4.41.0
+
+#data visualization
+graphviz>=0.20.1
+
+# Enhanced architecture components
+redis>=5.0.1            # For Redis cache backend and distributed lock management
+aiocache>=0.12.1        # For async caching support
+asyncio-redis>=0.16.0   # For async Redis operations
+pickle5>=0.0.11         # Enhanced pickle for serialization (optional)
+
+# Type hints support
+typing-extensions>=4.9.0
+
+# Logging enhancements
+
+# Date handling
+python-dateutil>=2.8.2
+
+# --- Testing Dependencies ---
+pytest==8.0.0
+pytest-asyncio==0.23.5
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+freezegun==1.4.0  # For datetime mocking
+responses==0.24.1  # For mocking HTTP requests
+
+# Additional dependencies for enhanced architecture
+jsonschema>=4.0.0
+PyYAML>=6.0             # For configuration and serialization
+ulid-py>=1.1.0          # For time-sorted unique IDs
+apscheduler>=3.10.1     # For background task scheduling
+tenacity>=8.2.2         # For retry logic in circuit breaker
